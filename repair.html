@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VZ Buff &amp; Polish - Functional Test</title>
+<title>VZ Buff &amp; Polish - Repair</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
@@ -115,9 +115,9 @@
       <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
       <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
       <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
-      <a href="functional-test.html" class="active"><span class="icon">🧪</span> Functional Test</a>
+      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
       <a href="buff-and-polish.html"><span class="icon">✨</span> Buff &amp; Polish</a>
-      <a href="repair.html"><span class="icon">🔧</span> Repair</a>
+      <a href="repair.html" class="active"><span class="icon">🔧</span> Repair</a>
     </div>
     <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
     <div class="nav-group">
@@ -128,7 +128,7 @@
 <div class="main-wrap">
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <div class="header">
-    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Functional Test</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Repair</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
     <div class="header-right">
       <span class="status-dot disconnected" id="statusDot"></span>
       <span class="status-label" id="statusLabel">Not connected</span>
@@ -158,7 +158,7 @@
 </html>
 <script>
 const URL_KEY = 'vzbnp_script_url';
-const PAGE_NAME = 'Functional Test';
+const PAGE_NAME = 'Repair';
 let scriptUrl = '';
 let currentDevice = null;
 let existingStatus = {};
@@ -169,17 +169,23 @@ let _jsonpCounter = 0;
 try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
 
 const TESTS = [
-  { param: 'Is Device Beyond Economical Repair (BER)? (Y/N)', label: 'BER Status', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
-  { param: 'Was Functional Light Repair Attempted (Y/N)', label: 'Light Repair Attempted', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
-  { param: 'PRE-SERVICE FUNCTION TEST  (Pass/Fail)', label: 'Pre-Service Function Test', options: ['PASS', 'FAIL', 'N/A'], type: 'buttons', cpo: true, clnr: true },
-  { param: 'PRE-SERVICE RF TEST (Pass / Fail)', label: 'Pre-Service RF Test', options: ['PASS', 'FAIL', 'N/A'], type: 'buttons', cpo: false, clnr: true },
-  { param: 'PRE-SERVICE AIR LEAK (PRESSURE CHAMBER) TEST (Pass / Fail)', label: 'Pre-Service Air Leak Test', options: ['PASS', 'FAIL', 'N/A'], type: 'buttons', cpo: false, clnr: true },
-  { param: 'POST-SERVICE FUNCTION TEST  (Pass / Fail)', label: 'Post-Service Function Test', options: ['PASS', 'FAIL', 'N/A'], type: 'buttons', cpo: true, clnr: true },
-  { param: 'POST-SERVICE RF TEST (Pass / Fail)', label: 'Post-Service RF Test', options: ['PASS', 'FAIL', 'N/A'], type: 'buttons', cpo: false, clnr: true },
-  { param: 'POST-SERVICE AIR LEAK (PRESSURE CHAMBER) TEST (Pass / Fail)', label: 'Post-Service Air Leak Test', options: ['PASS', 'FAIL', 'N/A'], type: 'buttons', cpo: false, clnr: true },
-  { param: 'BSOH IN BATTERY STATE OF HEALTH', label: 'BSOH IN (Battery State of Health)', type: 'text', placeholder: '0-100', unit: '%', cpo: true, clnr: true },
-  { param: 'BSOH OUT BATTERY STATE OF HEALTH', label: 'BSOH OUT (Battery State of Health)', type: 'text', placeholder: '0-100', unit: '%', cpo: true, clnr: true },
-  { param: 'VENDOR NOTES', label: 'Vendor Notes', type: 'text', placeholder: 'Enter notes...', unit: '', cpo: true, clnr: true }
+  { param: 'If device failed Pre-Service Function Test, what parts failed?  Please list out all components which failed CPO Standards', label: 'Parts That Failed Pre-Service', type: 'text', placeholder: 'List failed components...', unit: '', cpo: true, clnr: true },
+  { param: 'Earpiece', label: 'Earpiece Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Microphone', label: 'Microphone Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Face ID', label: 'Face ID Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Speaker', label: 'Speaker Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Rear Camera', label: 'Rear Camera Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Front Camera', label: 'Front Camera Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Touch Screen', label: 'Touch Screen Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Ring Mute Switch', label: 'Ring Mute Switch Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Light Sensor', label: 'Light Sensor Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Camera Flash', label: 'Camera Flash Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Device Vibrate', label: 'Device Vibrate Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Battery', label: 'Battery Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'RF', label: 'RF Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Comments on RF  (e.g., Antenna, Proximity Sensor, etc.) Please provides notes on what "RF" part issues were encountered or if RF issues are beyond L2 and therefore not repaired', label: 'RF Comments', type: 'text', placeholder: 'Antenna, Proximity Sensor, etc...', unit: '', cpo: true, clnr: true },
+  { param: 'Other', label: 'Other Repaired', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Comments on Other  (e.g., charging port, etc.) Please provides notes on what "other" part repairs were performed (L2 Only)', label: 'Other Comments', type: 'text', placeholder: 'Charging port, etc...', unit: '', cpo: true, clnr: true }
 ];
 
 function getVisibleTests() {

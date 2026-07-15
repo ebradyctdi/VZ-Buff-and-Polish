@@ -123,9 +123,12 @@
 <nav class="sidebar">
   <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
   <div class="sidebar-nav">
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Reporting</div>
     <div class="nav-group">
       <a href="overview.html"><span class="icon">📋</span> Overview</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-group">
       <a href="unit-validation.html" class="active"><span class="icon">✅</span> Unit Validation</a>
       <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
       <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
@@ -186,7 +189,7 @@ let existingStatus = {}; // { paramName: { result, timestamp, user } }
 let _jsonpCounter = 0;
 let sessionPass = 0, sessionFail = 0;
 
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbz2kzfjE3_-mb4mcXKuzpA4EDBYrD6oBfxaaTGVFbwhUu5N9_jssIqW6Iq87AqS3GDu/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
 
 const VALIDATION_PARAMS = ['IMEI', 'OEM', 'SKU', 'MODEL', 'DISPO IN'];
 

@@ -4,7 +4,7 @@
 // Deploy → New Deployment → Web App → Execute as: Me → Anyone
 // ============================================================
 // Current Apps Script URL:
-// https://script.google.com/macros/s/AKfycbz2kzfjE3_-mb4mcXKuzpA4EDBYrD6oBfxaaTGVFbwhUu5N9_jssIqW6Iq87AqS3GDu/exec
+// https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec
 // ============================================================
 // SETUP:
 // 1. Google Sheet: "VZ - Buff, Polish, and Repair"
