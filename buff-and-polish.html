@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VZ Buff &amp; Polish - Buff &amp; Polish</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1a3a5c; color: white; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; }
+  .sidebar-brand { padding: 20px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-brand .sub { font-size: 13px; opacity: 0.9; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; }
+</style>
+<style>
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+  .sidebar-nav::-webkit-scrollbar { width: 6px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: white; }
+  .sidebar-nav a.active { background: rgba(255,255,255,0.12); color: white; border-left-color: #fff; }
+  .sidebar-nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-nav .nav-section { font-size: 12px; text-transform: uppercase; color: rgba(255,255,255,0.85); padding: 16px 16px 8px; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: 600; }
+  .sidebar-nav .nav-section:hover { color: white; background: rgba(255,255,255,0.05); }
+  .sidebar-nav .nav-group { display: none; }
+  .sidebar-nav .nav-group.open { display: block; }
+  .main-wrap { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .status-dot.connected { background: #28a745; }
+  .status-dot.disconnected { background: #dc3545; }
+  .status-dot.pending { background: #fd7e14; }
+  .status-label { font-size: 11px; color: rgba(255,255,255,0.8); margin-left: 4px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 24px; width: 100%; }
+</style>
+<style>
+  .scan-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .scan-section h2 { font-size: 16px; color: #1a3a5c; margin-bottom: 16px; }
+  .scan-row { display: flex; gap: 12px; align-items: center; }
+  .scan-row input { flex: 1; padding: 12px 16px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; font-family: Consolas, monospace; transition: border-color 0.2s; }
+  .scan-row input:focus { outline: none; border-color: #1a3a5c; }
+  .scan-row button { padding: 12px 24px; background: #1a3a5c; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .scan-row button:hover { background: #2c5f8a; }
+  .scan-row button:disabled { background: #aaa; cursor: not-allowed; }
+  .operator-row { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .operator-row label { font-size: 13px; font-weight: 600; color: #555; white-space: nowrap; }
+  .operator-row input { flex: 1; max-width: 250px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+  .device-banner { background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; display: none; }
+  .device-banner.show { display: block; }
+  .device-banner .banner-imei { font-family: Consolas, monospace; font-weight: 700; font-size: 15px; color: #1a3a5c; }
+  .device-banner .banner-info { font-size: 12px; color: #555; margin-top: 4px; }
+</style>
+<style>
+  .test-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; display: none; }
+  .test-section.show { display: block; }
+  .test-section h3 { font-size: 14px; color: #1a3a5c; margin-bottom: 4px; }
+  .test-section .test-desc { font-size: 11px; color: #888; margin-bottom: 12px; }
+  .test-section .previous-result { font-size: 11px; margin-bottom: 10px; padding: 6px 10px; border-radius: 4px; }
+  .test-section .previous-result.pass { background: #d4edda; color: #155724; }
+  .test-section .previous-result.fail { background: #f8d7da; color: #721c24; }
+  .test-section .previous-result.cleared { background: #e9ecef; color: #6c757d; }
+  .grade-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .grade-btn { padding: 10px 20px; border: 2px solid #ddd; border-radius: 8px; background: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .grade-btn:hover { border-color: #1a3a5c; background: #f0f4ff; }
+  .grade-btn.selected { border-color: #0d6efd; background: #e7f1ff; color: #0d6efd; transform: scale(1.05); }
+  .grade-btn.dimmed { opacity: 0.4; }
+  .text-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .text-input-row input { flex: 1; max-width: 300px; padding: 10px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
+  .text-input-row input:focus { outline: none; border-color: #1a3a5c; }
+  .text-input-row .unit-label { font-size: 13px; color: #666; font-weight: 500; }
+  .submit-row { display: flex; gap: 8px; align-items: center; }
+  .submit-row .btn-submit { padding: 8px 16px; background: #0d6efd; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .submit-row .btn-submit:hover { background: #0b5ed7; }
+  .submit-row .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+  .submit-row .btn-submit-note { padding: 8px 16px; background: #0d6efd; color: white; border: 2px dashed rgba(255,255,255,0.5); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .submit-row .btn-submit-note:disabled { background: #aaa; cursor: not-allowed; border-color: transparent; }
+  .submit-row .btn-clear { padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .note-area { display: none; margin-top: 10px; }
+  .note-area.show { display: block; }
+  .note-area textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; resize: vertical; min-height: 50px; margin-bottom: 8px; }
+  #toast { position: fixed; top: 80px; right: 30px; padding: 14px 24px; border-radius: 6px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 400; transform: translateX(120%); transition: transform 0.3s ease; }
+</style>
+<style>
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 300; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+    .sidebar-overlay.show { display: block; }
+    .main-wrap { margin-left: 0; }
+    .header { padding: 12px 16px; }
+    .header h1 { font-size: 16px; }
+    .container { padding: 16px; }
+    .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
+    .scan-row { flex-direction: column; }
+    .scan-row input, .scan-row button { width: 100%; }
+    .text-input-row { flex-direction: column; align-items: stretch; }
+    .text-input-row input { max-width: 100%; }
+  }
+  @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
+  <div class="sidebar-nav">
+    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-group">
+      <a href="overview.html"><span class="icon">📋</span> Overview</a>
+      <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
+      <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
+      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
+      <a href="buff-and-polish.html" class="active"><span class="icon">✨</span> Buff &amp; Polish</a>
+      <a href="repair.html"><span class="icon">🔧</span> Repair</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">⚙️</span> Settings</a>
+    </div>
+  </div>
+</nav>
+<div class="main-wrap">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="header">
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Buff &amp; Polish</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+    <div class="header-right">
+      <span class="status-dot disconnected" id="statusDot"></span>
+      <span class="status-label" id="statusLabel">Not connected</span>
+    </div>
+  </div>
+  <div class="container">
+    <div class="scan-section">
+      <div class="operator-row">
+        <label for="operatorName">Operator:</label>
+        <input type="text" id="operatorName" placeholder="Enter your name..." autocomplete="off">
+      </div>
+      <h2>Scan IMEI</h2>
+      <div class="scan-row">
+        <input type="text" id="imeiInput" placeholder="Scan or type IMEI (15 digits)..." maxlength="15" autocomplete="off" inputmode="numeric">
+        <button id="lookupBtn" onclick="doLookup()">Look Up</button>
+      </div>
+    </div>
+    <div class="device-banner" id="deviceBanner">
+      <div class="banner-imei" id="bannerIMEI"></div>
+      <div class="banner-info" id="bannerInfo"></div>
+    </div>
+    <div id="testFields"></div>
+  </div>
+</div>
+<div id="toast"></div>
+</body>
+</html>
+<script>
+const URL_KEY = 'vzbnp_script_url';
+const PAGE_NAME = 'Buff & Polish';
+let scriptUrl = '';
+let currentDevice = null;
+let existingStatus = {};
+let fieldSelections = {};
+let fieldResults = {};
+let _jsonpCounter = 0;
+
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbz2kzfjE3_-mb4mcXKuzpA4EDBYrD6oBfxaaTGVFbwhUu5N9_jssIqW6Iq87AqS3GDu/exec'; } catch(e) {}
+
+const TESTS = [
+  { param: 'Was Unit Buff & Polished (Y/N)', label: 'Was Unit Buff & Polished?', options: ['YES', 'NO'], type: 'buttons', cpo: true, clnr: true },
+  { param: '1 SIDE B&P  (Indicate Y if Attempted)', label: '1 Side B&P Attempted', options: ['YES', 'NO', 'N/A'], type: 'buttons', cpo: true, clnr: true },
+  { param: '2 SIDE B&P  (Indicate Y if Attempted)', label: '2 Side B&P Attempted', options: ['YES', 'NO', 'N/A'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'B&P NOT ATTEMPTED', label: 'B&P Not Attempted', options: ['NOT ATTEMPTED', 'N/A'], type: 'buttons', cpo: true, clnr: true },
+  { param: 'Reason for B&P No Attempt', label: 'Reason for B&P No Attempt', type: 'text', placeholder: 'Enter reason...', unit: '', cpo: true, clnr: true }
+];
+
+function getVisibleTests() {
+  if (!currentDevice) return [];
+  const orderType = currentDevice['Order Type'] || '';
+  return TESTS.filter(t => orderType === 'CLNR' ? t.clnr : t.cpo);
+}
+
+function jsonpRequest(url, params) {
+  return new Promise((resolve, reject) => {
+    const cb = '_jsonpCb_' + (++_jsonpCounter) + '_' + Date.now();
+    const qs = Object.entries(params||{}).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = url + sep + 'callback=' + cb + (qs ? '&' + qs : '');
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Timed out')); }, 15000);
+    function cleanup() { clearTimeout(timeout); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    const s = document.createElement('script');
+    s.src = fullUrl; s.onerror = function() { cleanup(); reject(new Error('Network error')); };
+    document.head.appendChild(s);
+  });
+}
+
+function setStatus(state, label) {
+  document.getElementById('statusDot').className = 'status-dot ' + state;
+  document.getElementById('statusLabel').textContent = label;
+}
+
+function isValidIMEI(val) { return /^\d{15}$/.test(val); }
+
+async function doLookup() {
+  const imei = document.getElementById('imeiInput').value.trim();
+  if (!imei) { showToast('Scan or type an IMEI', 'error'); return; }
+  if (!isValidIMEI(imei)) { showToast('IMEI must be exactly 15 digits', 'error'); return; }
+  if (!scriptUrl) { showToast('No Apps Script URL — go to Settings', 'error'); return; }
+
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true; btn.textContent = 'Looking up...';
+  setStatus('pending', 'Looking up...');
+
+  try {
+    const [deviceJson, statusJson] = await Promise.all([
+      jsonpRequest(scriptUrl, { action: 'lookupdevice', imei: imei }),
+      jsonpRequest(scriptUrl, { action: 'getstatus', imei: imei })
+    ]);
+    if (deviceJson.success) {
+      currentDevice = deviceJson.data;
+      existingStatus = (statusJson.success && statusJson.data) ? statusJson.data : {};
+      fieldSelections = {};
+      fieldResults = {};
+      showDeviceBanner();
+      renderTests();
+      setStatus('connected', 'Connected');
+    } else {
+      showToast(deviceJson.error || 'Device not found', 'error');
+      hideAll();
+      setStatus('connected', 'Connected');
+    }
+  } catch(err) {
+    showToast('Connection error: ' + err.message, 'error');
+    setStatus('disconnected', 'Connection failed');
+  }
+  btn.disabled = false; btn.textContent = 'Look Up';
+}
+
+function showDeviceBanner() {
+  document.getElementById('bannerIMEI').textContent = currentDevice['IMEI'];
+  document.getElementById('bannerInfo').textContent = currentDevice['MODEL'] + ' — ' + currentDevice['OEM'] + ' — ' + currentDevice['Order Type'];
+  document.getElementById('deviceBanner').classList.add('show');
+}
+
+function hideAll() {
+  document.getElementById('deviceBanner').classList.remove('show');
+  document.getElementById('testFields').innerHTML = '';
+}
+
+function renderTests() {
+  const tests = getVisibleTests();
+  const container = document.getElementById('testFields');
+  let html = '';
+
+  tests.forEach(test => {
+    const param = test.param;
+    const submitted = fieldResults[param] || '';
+    const existing = existingStatus[param] || null;
+    const hasExisting = existing && existing.result !== 'CLEARED';
+    const selected = fieldSelections[param] || '';
+    const id = param.replace(/[^a-zA-Z0-9]/g, '_');
+    const isText = test.type === 'text';
+
+    html += '<div class="test-section show" id="sec_' + id + '">';
+    html += '<h3>' + test.label + '</h3>';
+    html += '<div class="test-desc">' + param + '</div>';
+
+    // Show previous/current result
+    if (submitted) {
+      html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
+      html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></div>';
+    } else if (hasExisting) {
+      const cls = (existing.result === 'FAIL' || existing.result === 'NO') ? 'fail' : 'pass';
+      html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
+
+      if (isText) {
+        html += '<div class="text-input-row">';
+        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
+        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
+        html += '</div>';
+      } else {
+        html += '<div class="grade-options">';
+        test.options.forEach(g => {
+          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
+          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
+        });
+        html += '</div>';
+      }
+
+      html += '<div class="submit-row">';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '<button class="btn-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button>';
+      html += '</div>';
+      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+
+    } else if (existing && existing.result === 'CLEARED') {
+      html += '<div class="previous-result cleared">⟳ Cleared — needs re-test (' + existing.timestamp + ' by ' + existing.user + ')</div>';
+
+      if (isText) {
+        html += '<div class="text-input-row">';
+        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
+        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
+        html += '</div>';
+      } else {
+        html += '<div class="grade-options">';
+        test.options.forEach(g => {
+          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
+          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
+        });
+        html += '</div>';
+      }
+
+      html += '<div class="submit-row">';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '</div>';
+      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+
+    } else {
+      // No previous result
+      if (isText) {
+        html += '<div class="text-input-row">';
+        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
+        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
+        html += '</div>';
+      } else {
+        html += '<div class="grade-options">';
+        test.options.forEach(g => {
+          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
+          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
+        });
+        html += '</div>';
+      }
+
+      html += '<div class="submit-row">';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '</div>';
+      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    }
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+function selectGrade(param, grade) {
+  fieldSelections[param] = grade;
+  renderTests();
+}
+
+function selectText(param, id) {
+  const el = document.getElementById('input_' + id);
+  if (el) {
+    fieldSelections[param] = el.value;
+    // Enable/disable submit buttons without full re-render to keep cursor position
+    const sec = document.getElementById('sec_' + id);
+    if (sec) {
+      const btns = sec.querySelectorAll('.btn-submit, .btn-submit-note');
+      btns.forEach(b => { b.disabled = !el.value.trim(); });
+    }
+  }
+}
+
+function showNote(id) {
+  document.getElementById('note_' + id).classList.add('show');
+  document.getElementById('noteText_' + id).focus();
+}
+function hideNote(id) {
+  document.getElementById('note_' + id).classList.remove('show');
+}
+
+async function submitTest(param, id) {
+  const operator = document.getElementById('operatorName').value.trim();
+  if (!operator) { showToast('Enter your name first', 'error'); return; }
+  let result = fieldSelections[param];
+  if (!result || !result.trim()) return;
+  result = result.trim();
+
+  // Validate percentage fields (won't trigger for this page since no test has unit='%')
+  const test = TESTS.find(t => t.param === param);
+  if (test && test.unit === '%') {
+    const num = parseFloat(result);
+    if (isNaN(num) || num < 0 || num > 100) {
+      showToast('Enter a valid percentage (0-100)', 'error');
+      return;
+    }
+    result = num + '%';
+  }
+
+  fieldResults[param] = result;
+  renderTests();
+
+  try {
+    await jsonpRequest(scriptUrl, {
+      action: 'logtest',
+      imei: currentDevice['IMEI'],
+      page: PAGE_NAME,
+      parameter: param,
+      result: result,
+      user: operator,
+      note: ''
+    });
+    showToast('Result submitted: ' + result, 'success');
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function submitTestWithNote(param, id) {
+  const operator = document.getElementById('operatorName').value.trim();
+  if (!operator) { showToast('Enter your name first', 'error'); return; }
+  let result = fieldSelections[param];
+  if (!result || !result.trim()) return;
+  result = result.trim();
+  const note = document.getElementById('noteText_' + id).value.trim();
+  if (!note) { showToast('Enter a note or use Submit Result', 'error'); return; }
+
+  // Validate percentage fields (won't trigger for this page since no test has unit='%')
+  const test = TESTS.find(t => t.param === param);
+  if (test && test.unit === '%') {
+    const num = parseFloat(result);
+    if (isNaN(num) || num < 0 || num > 100) {
+      showToast('Enter a valid percentage (0-100)', 'error');
+      return;
+    }
+    result = num + '%';
+  }
+
+  fieldResults[param] = result;
+  renderTests();
+
+  try {
+    await jsonpRequest(scriptUrl, {
+      action: 'logtest',
+      imei: currentDevice['IMEI'],
+      page: PAGE_NAME,
+      parameter: param,
+      result: result,
+      user: operator,
+      note: note
+    });
+    showToast('Result submitted: ' + result, 'success');
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function clearTest(param) {
+  const operator = document.getElementById('operatorName').value.trim();
+  if (!operator) { showToast('Enter your name first', 'error'); return; }
+
+  delete fieldResults[param];
+  delete fieldSelections[param];
+  delete existingStatus[param];
+  renderTests();
+
+  try {
+    await jsonpRequest(scriptUrl, {
+      action: 'logtest',
+      imei: currentDevice['IMEI'],
+      page: PAGE_NAME,
+      parameter: param,
+      result: 'CLEARED',
+      user: operator,
+      note: ''
+    });
+    showToast(TESTS.find(t=>t.param===param)?.label + ' cleared', 'warning');
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// Enter key triggers lookup
+document.getElementById('imeiInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); doLookup(); }
+});
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.style.background = type==='success'?'#28a745':type==='error'?'#dc3545':'#fd7e14';
+  t.style.transform = 'translateX(0)';
+  setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 2500);
+}
+
+function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+function toggleNavGroup(el) {
+  var group = el.nextElementSibling;
+  if (group && group.classList.contains('nav-group')) {
+    group.classList.toggle('open');
+    el.textContent = (group.classList.contains('open') ? '▼ ' : '▶ ') + el.textContent.replace(/^[▶▼] /, '');
+  }
+}
+document.querySelectorAll('.nav-group').forEach(function(g) {
+  if (g.querySelector('a.active')) {
+    g.classList.add('open');
+    var hdr = g.previousElementSibling;
+    if (hdr) hdr.textContent = hdr.textContent.replace('▶', '▼');
+  }
+});
+
+if (scriptUrl) { setStatus('connected', 'Ready'); } else { setStatus('disconnected', 'No URL — go to Settings'); }
+</script>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VZ Buff &amp; Polish - Settings</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1a3a5c; color: white; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; }
+  .sidebar-brand { padding: 20px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-brand .sub { font-size: 13px; opacity: 0.9; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+  .sidebar-nav::-webkit-scrollbar { width: 6px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: white; }
+  .sidebar-nav a.active { background: rgba(255,255,255,0.12); color: white; border-left-color: #fff; }
+  .sidebar-nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-nav .nav-section { font-size: 12px; text-transform: uppercase; color: rgba(255,255,255,0.85); padding: 16px 16px 8px; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: 600; }
+  .sidebar-nav .nav-section:hover { color: white; background: rgba(255,255,255,0.05); }
+  .sidebar-nav .nav-group { display: none; }
+  .sidebar-nav .nav-group.open { display: block; }
+  .main-wrap { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .container { max-width: 700px; margin: 0 auto; padding: 24px; width: 100%; }
+
+  .settings-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .settings-card h2 { font-size: 16px; color: #1a3a5c; margin-bottom: 6px; }
+  .settings-card p { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .settings-card label { font-size: 12px; font-weight: 600; color: #555; display: block; margin-bottom: 6px; }
+  .settings-card input[type="text"] { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: Consolas, monospace; }
+  .settings-card button { margin-top: 12px; padding: 10px 24px; background: #1a3a5c; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .settings-card button:hover { background: #2c5f8a; }
+  .current-url { margin-top: 10px; font-size: 11px; color: #888; word-break: break-all; font-family: Consolas, monospace; }
+
+  #toast { position: fixed; top: 80px; right: 30px; padding: 14px 24px; border-radius: 6px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 400; transform: translateX(120%); transition: transform 0.3s ease; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 300; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+    .sidebar-overlay.show { display: block; }
+    .main-wrap { margin-left: 0; }
+    .header { padding: 12px 16px; }
+    .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
+  }
+  @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
+  <div class="sidebar-nav">
+    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-group">
+      <a href="overview.html"><span class="icon">📋</span> Overview</a>
+      <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-group">
+      <a href="settings.html" class="active"><span class="icon">⚙️</span> Settings</a>
+    </div>
+  </div>
+</nav>
+<div class="main-wrap">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="header">
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Settings</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+  </div>
+  <div class="container">
+    <div class="settings-card">
+      <h2>Apps Script URL</h2>
+      <p>Enter the deployed Google Apps Script Web App URL. This connects the tool to your Google Sheet backend.</p>
+      <label for="urlInput">Web App URL</label>
+      <input type="text" id="urlInput" placeholder="https://script.google.com/macros/s/.../exec">
+      <button onclick="saveUrl()">Save URL</button>
+      <div class="current-url" id="currentUrl"></div>
+    </div>
+
+    <div class="settings-card">
+      <h2>Connection Test</h2>
+      <p>Test that the Web App URL is working correctly.</p>
+      <button onclick="testConnection()" id="testConnBtn" style="margin-top:4px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">🔌 Test Connection</button>
+      <div id="testResult" style="margin-top:12px;font-size:13px;display:none;padding:12px 16px;border-radius:6px;"></div>
+    </div>
+
+    <div class="settings-card">
+      <h2>Google Sheet</h2>
+      <p>The backend data lives in the Google Sheet below.</p>
+      <a href="https://docs.google.com/spreadsheets/d/1YndKgV3kVOEtW4RzBQGy8ANJ_VEEmhj7dB6kD88WwNo/edit" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#0d6efd;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;margin-top:4px;">📊 Open Google Sheet</a>
+    </div>
+
+    <div class="settings-card">
+      <h2>Setup Instructions</h2>
+      <p>To set up the Google Sheet backend:</p>
+      <ol style="font-size:13px;color:#555;padding-left:20px;line-height:2;">
+        <li>Create a new Google Sheet</li>
+        <li>Add a tab called <strong>"Device Information"</strong> with headers: IMEI, OEM, SKU, MODEL, Order Type, DISPO IN</li>
+        <li>Paste your device data into that tab (IMEI in column A)</li>
+        <li>Go to <strong>Extensions → Apps Script</strong></li>
+        <li>Paste the contents of <code>google-apps-script.js</code> and save</li>
+        <li>Click <strong>Deploy → New Deployment → Web App</strong></li>
+        <li>Set "Execute as" to <strong>Me</strong>, "Who has access" to <strong>Anyone</strong></li>
+        <li>Copy the Web App URL and paste it above</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+</body>
+</html>
+
+<script>
+const URL_KEY = 'vzbnp_script_url';
+let scriptUrl = '';
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbz2kzfjE3_-mb4mcXKuzpA4EDBYrD6oBfxaaTGVFbwhUu5N9_jssIqW6Iq87AqS3GDu/exec'; } catch(e) {}
+
+document.getElementById('urlInput').value = scriptUrl;
+document.getElementById('currentUrl').textContent = scriptUrl ? 'Current: ' + scriptUrl : 'No URL saved';
+
+function saveUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Enter a URL', 'error'); return; }
+  try { localStorage.setItem(URL_KEY, url); } catch(e) {}
+  scriptUrl = url;
+  document.getElementById('currentUrl').textContent = 'Current: ' + url;
+  showToast('URL saved', 'success');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.style.background = type==='success'?'#28a745':type==='error'?'#dc3545':'#fd7e14';
+  t.style.transform = 'translateX(0)';
+  setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 2500);
+}
+
+// JSONP for connection test
+let _jsonpCounter = 0;
+function jsonpRequest(url, params) {
+  return new Promise((resolve, reject) => {
+    const cb = '_jsonpCb_' + (++_jsonpCounter) + '_' + Date.now();
+    const qs = Object.entries(params||{}).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = url + sep + 'callback=' + cb + (qs ? '&' + qs : '');
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Timed out')); }, 15000);
+    function cleanup() { clearTimeout(timeout); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    const s = document.createElement('script');
+    s.src = fullUrl; s.onerror = function() { cleanup(); reject(new Error('Network error')); };
+    document.head.appendChild(s);
+  });
+}
+
+async function testConnection() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Enter a URL first', 'error'); return; }
+
+  const btn = document.getElementById('testConnBtn');
+  const resultDiv = document.getElementById('testResult');
+  btn.disabled = true; btn.textContent = '⏳ Testing...';
+  resultDiv.style.display = 'none';
+
+  try {
+    // Test 1: Basic connection with a lookup for a known IMEI
+    const json = await jsonpRequest(url, { action: 'lookupdevice', imei: '359608205459768' });
+    
+    let html = '';
+    if (json.success) {
+      html += '<div style="color:#28a745;font-weight:600;margin-bottom:8px;">✓ Connection successful!</div>';
+      html += '<div style="color:#555;">Returned device: <strong>' + (json.data.MODEL || 'Unknown') + '</strong> (' + (json.data.OEM || '') + ')</div>';
+      resultDiv.style.background = '#f0fff0';
+      resultDiv.style.border = '1px solid #c3e6cb';
+    } else {
+      html += '<div style="color:#fd7e14;font-weight:600;margin-bottom:8px;">⚠️ Connected but got an error:</div>';
+      html += '<div style="color:#555;">' + (json.error || 'Unknown error') + '</div>';
+      resultDiv.style.background = '#fff8e1';
+      resultDiv.style.border = '1px solid #ffc107';
+    }
+    resultDiv.innerHTML = html;
+    resultDiv.style.display = 'block';
+  } catch(err) {
+    resultDiv.innerHTML = '<div style="color:#dc3545;font-weight:600;">✗ Connection failed</div><div style="color:#555;margin-top:4px;">' + err.message + '</div>';
+    resultDiv.style.background = '#fff5f5';
+    resultDiv.style.border = '1px solid #f5c6cb';
+    resultDiv.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = '🔌 Test Connection';
+}
+
+function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+function toggleNavGroup(el) {
+  var group = el.nextElementSibling;
+  if (group && group.classList.contains('nav-group')) {
+    group.classList.toggle('open');
+    el.textContent = (group.classList.contains('open') ? '▼ ' : '▶ ') + el.textContent.replace(/^[▶▼] /, '');
+  }
+}
+document.querySelectorAll('.nav-group').forEach(function(g) {
+  if (g.querySelector('a.active')) {
+    g.classList.add('open');
+    var hdr = g.previousElementSibling;
+    if (hdr) hdr.textContent = hdr.textContent.replace('▶', '▼');
+  }
+});
+</script>
+</html>
