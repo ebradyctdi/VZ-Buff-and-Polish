@@ -51,7 +51,9 @@
 
   .data-table-wrap { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .data-table th { background: #1a3a5c; color: white; padding: 12px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; }
+  .data-table th { background: #1a3a5c; color: white; padding: 12px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; cursor: pointer; user-select: none; }
+  .data-table th:hover { background: #2c5f8a; }
+  .data-table th .sort-arrow { margin-left: 4px; font-size: 10px; opacity: 0.6; }
   .data-table td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
   .data-table tr:hover { background: #f8f9fa; }
   .data-table .imei-col { font-family: Consolas, monospace; font-weight: 600; }
@@ -160,13 +162,28 @@
         <option value="CPO">CPO</option>
         <option value="CLNR">CLNR</option>
       </select>
+      <select id="filterOEM" onchange="renderTable()">
+        <option value="">All OEMs</option>
+      </select>
+      <select id="filterModel" onchange="renderTable()">
+        <option value="">All Models</option>
+      </select>
     </div>
 
     <div class="data-table-wrap">
       <div class="table-scroll">
         <table class="data-table">
           <thead>
-            <tr><th>IMEI</th><th>OEM</th><th>SKU</th><th>Model</th><th>Order Type</th><th>DISPO IN</th><th>Status</th><th></th></tr>
+            <tr>
+              <th onclick="sortTable('IMEI')">IMEI<span class="sort-arrow" id="sort_IMEI"></span></th>
+              <th onclick="sortTable('OEM')">OEM<span class="sort-arrow" id="sort_OEM"></span></th>
+              <th onclick="sortTable('SKU')">SKU<span class="sort-arrow" id="sort_SKU"></span></th>
+              <th onclick="sortTable('MODEL')">Model<span class="sort-arrow" id="sort_MODEL"></span></th>
+              <th onclick="sortTable('Order Type')">Order Type<span class="sort-arrow" id="sort_Order Type"></span></th>
+              <th onclick="sortTable('DISPO IN')">DISPO IN<span class="sort-arrow" id="sort_DISPO IN"></span></th>
+              <th onclick="sortTable('Status')">Status<span class="sort-arrow" id="sort_Status"></span></th>
+              <th></th>
+            </tr>
           </thead>
           <tbody id="tableBody">
             <tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">Loading...</td></tr>
@@ -194,6 +211,7 @@
 const URL_KEY = 'vzbnp_script_url';
 let scriptUrl = '';
 let allDevices = [], allStatuses = {};
+let sortField = '', sortDir = 1; // 1 = asc, -1 = desc
 let _jsonpCounter = 0;
 
 try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
@@ -301,11 +319,33 @@ async function loadData() {
     if (statJson.success) allStatuses = statJson.data || {};
     setStatus('connected', 'Connected');
     renderKPIs();
+    populateFilters();
     renderTable();
   } catch(err) {
     setStatus('disconnected', 'Connection failed');
     showToast('Error: ' + err.message, 'error');
   }
+}
+
+function sortTable(field) {
+  if (sortField === field) {
+    sortDir *= -1;
+  } else {
+    sortField = field;
+    sortDir = 1;
+  }
+  renderTable();
+}
+
+function populateFilters() {
+  const oems = [...new Set(allDevices.map(d => d['OEM']))].sort();
+  const models = [...new Set(allDevices.map(d => d['MODEL']))].sort();
+
+  const oemSelect = document.getElementById('filterOEM');
+  oemSelect.innerHTML = '<option value="">All OEMs</option>' + oems.map(o => '<option value="' + o + '">' + o + '</option>').join('');
+
+  const modelSelect = document.getElementById('filterModel');
+  modelSelect.innerHTML = '<option value="">All Models</option>' + models.map(m => '<option value="' + m + '">' + m + '</option>').join('');
 }
 
 function renderKPIs() {
@@ -326,16 +366,44 @@ function renderTable() {
   const filterIMEI = document.getElementById('filterIMEI').value.trim().toLowerCase();
   const filterStatus = document.getElementById('filterStatus').value;
   const filterOrderType = document.getElementById('filterOrderType').value;
+  const filterOEM = document.getElementById('filterOEM').value;
+  const filterModel = document.getElementById('filterModel').value;
 
   let filtered = allDevices.filter(d => {
     if (filterIMEI && !d['IMEI'].toLowerCase().includes(filterIMEI)) return false;
     if (filterOrderType && d['Order Type'] !== filterOrderType) return false;
+    if (filterOEM && d['OEM'] !== filterOEM) return false;
+    if (filterModel && d['MODEL'] !== filterModel) return false;
     if (filterStatus) {
       const s = getUnitStatus(d['IMEI'], d['Order Type']);
       if (s !== filterStatus) return false;
     }
     return true;
   });
+
+  // Sort
+  if (sortField) {
+    filtered.sort((a, b) => {
+      let valA, valB;
+      if (sortField === 'Status') {
+        valA = getUnitStatus(a['IMEI'], a['Order Type']);
+        valB = getUnitStatus(b['IMEI'], b['Order Type']);
+      } else {
+        valA = (a[sortField] || '').toString().toLowerCase();
+        valB = (b[sortField] || '').toString().toLowerCase();
+      }
+      if (valA < valB) return -1 * sortDir;
+      if (valA > valB) return 1 * sortDir;
+      return 0;
+    });
+  }
+
+  // Update sort arrows
+  document.querySelectorAll('.sort-arrow').forEach(el => { el.textContent = ''; });
+  if (sortField) {
+    const arrowEl = document.getElementById('sort_' + sortField);
+    if (arrowEl) arrowEl.textContent = sortDir === 1 ? ' ▲' : ' ▼';
+  }
 
   const tbody = document.getElementById('tableBody');
   if (!filtered.length) {
@@ -359,6 +427,24 @@ function renderTable() {
     html += '</tr>';
   });
   tbody.innerHTML = html;
+}
+
+function fmtTimestamp(str) {
+  if (!str || str === '—') return '—';
+  const d = new Date(str);
+  if (isNaN(d.getTime())) {
+    // Try to parse "M/d/yyyy HH:mm:ss" format from Apps Script
+    return str.replace(/(\d+)\/(\d+)\/(\d{4})\s+(\d+:\d+:\d+)/, function(m, mo, day, yr, time) {
+      return mo.padStart(2,'0') + '/' + day.padStart(2,'0') + '/' + yr.slice(2) + ' ' + time;
+    });
+  }
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const yr = String(d.getFullYear()).slice(2);
+  const h = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  const sec = String(d.getSeconds()).padStart(2, '0');
+  return mo + '/' + day + '/' + yr + ' ' + h + ':' + mi + ':' + sec;
 }
 
 function showDetail(imei, orderType) {
@@ -402,7 +488,7 @@ function showDetail(imei, orderType) {
       html += '<td style="max-width:250px;word-wrap:break-word;">' + p + '</td>';
       html += '<td class="' + resultCls + '">' + resultText + '</td>';
       html += '<td>' + (s ? s.user : '—') + '</td>';
-      html += '<td>' + (s ? s.timestamp : '—') + '</td>';
+      html += '<td>' + (s ? fmtTimestamp(s.timestamp) : '—') + '</td>';
       html += '<td>' + (s && s.note ? s.note : '—') + '</td>';
       html += '</tr>';
     });
