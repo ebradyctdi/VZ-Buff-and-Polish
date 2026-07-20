@@ -125,22 +125,38 @@
 <nav class="sidebar">
   <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
   <div class="sidebar-nav">
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Reporting</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
     <div class="nav-group">
-      <a href="overview.html"><span class="icon">📋</span> Overview</a>
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
     <div class="nav-group">
-      <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
-      <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
-      <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
-      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
-      <a href="buff-and-polish.html"><span class="icon">✨</span> Buff &amp; Polish</a>
-      <a href="repair.html" class="active"><span class="icon">🔧</span> Repair</a>
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
-      <a href="settings.html"><span class="icon">⚙️</span> Settings</a>
+      <a href="repair.html" class="active"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
     </div>
   </div>
 </nav>
@@ -185,27 +201,9 @@ let fieldSelections = {};
 let fieldResults = {};
 let _jsonpCounter = 0;
 
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
 
-const TESTS = [
-  { param: 'If device failed Pre-Service Function Test, what parts failed?  Please list out all components which failed CPO Standards', label: 'Parts That Failed Pre-Service', type: 'text', placeholder: 'List failed components...', unit: '', cpo: true, clnr: true },
-  { param: 'Earpiece', label: 'Earpiece', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Microphone', label: 'Microphone', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Face ID', label: 'Face ID', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Speaker', label: 'Speaker', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Rear Camera', label: 'Rear Camera', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Front Camera', label: 'Front Camera', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Touch Screen', label: 'Touch Screen', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Ring Mute Switch', label: 'Ring Mute Switch', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Light Sensor', label: 'Light Sensor', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Camera Flash', label: 'Camera Flash', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Device Vibrate', label: 'Device Vibrate', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'Battery', label: 'Battery', options: ['YES', 'NO'], type: 'buttons', group: 'components', cpo: true, clnr: true },
-  { param: 'RF', label: 'RF Repaired', options: ['YES', 'NO'], type: 'buttons', group: 'rf', cpo: true, clnr: true },
-  { param: 'Comments on RF  (e.g., Antenna, Proximity Sensor, etc.) Please provides notes on what "RF" part issues were encountered or if RF issues are beyond L2 and therefore not repaired', label: 'RF Comments', type: 'text', placeholder: 'Antenna, Proximity Sensor, etc...', unit: '', group: 'rf', cpo: true, clnr: true },
-  { param: 'Other', label: 'Other Repaired', options: ['YES', 'NO'], type: 'buttons', group: 'other', cpo: true, clnr: true },
-  { param: 'Comments on Other  (e.g., charging port, etc.) Please provides notes on what "other" part repairs were performed (L2 Only)', label: 'Other Comments', type: 'text', placeholder: 'Charging port, etc...', unit: '', group: 'other', cpo: true, clnr: true }
-];
+let TESTS = []; // Loaded dynamically from Task Configuration
 
 function getVisibleTests() {
   if (!currentDevice) return [];
@@ -246,10 +244,38 @@ async function doLookup() {
   setStatus('pending', 'Looking up...');
 
   try {
-    const [deviceJson, statusJson] = await Promise.all([
+    const [deviceJson, statusJson, tasksJson] = await Promise.all([
       jsonpRequest(scriptUrl, { action: 'lookupdevice', imei: imei }),
-      jsonpRequest(scriptUrl, { action: 'getstatus', imei: imei })
+      jsonpRequest(scriptUrl, { action: 'getstatus', imei: imei }),
+      jsonpRequest(scriptUrl, { action: 'readpagetasks', page: PAGE_NAME })
     ]);
+    if (tasksJson.success) {
+      TESTS = (tasksJson.data || []).map(t => {
+        const resultType = t['Result Type'] || '';
+        const options = t['Options'] ? t['Options'].split(',').map(o => o.trim()) : [];
+        let type = 'buttons';
+        let opts = [];
+        if (resultType === 'PASS/FAIL') { opts = ['PASS', 'FAIL']; }
+        else if (resultType === 'PASS/FAIL/NA') { opts = ['PASS', 'FAIL', 'N/A']; }
+        else if (resultType === 'YES/NO') { opts = ['YES', 'NO']; }
+        else if (resultType === 'YES/NO/NA') { opts = ['YES', 'NO', 'N/A']; }
+    else if (resultType === 'YES/NO/NOT REQUIRED') { opts = ['YES', 'NO', 'NOT REQUIRED']; }
+        else if (resultType === 'DROPDOWN') { opts = options; }
+        else if (resultType === 'FREE TEXT') { type = 'text'; }
+        else if (resultType === 'PERCENTAGE') { type = 'text'; }
+        return {
+          taskId: t['Task ID'],
+          param: t['Task Name'] || t['Task ID'],
+          label: t['Label'] || t['Task Name'] || t['Task ID'],
+          options: opts,
+          type: type,
+          unit: resultType === 'PERCENTAGE' ? '%' : '',
+          placeholder: type === 'text' ? (resultType === 'PERCENTAGE' ? '0-100' : 'Enter value...') : '',
+          cpo: t['CPO'] === 'Yes',
+          clnr: t['CLNR'] === 'Yes'
+        };
+      });
+    }
     if (deviceJson.success) {
       currentDevice = deviceJson.data;
       existingStatus = (statusJson.success && statusJson.data) ? statusJson.data : {};
@@ -286,207 +312,69 @@ function renderTests() {
   const container = document.getElementById('testFields');
   let html = '';
 
-  const componentTests = tests.filter(t => t.group === 'components');
-  const rfTests = tests.filter(t => t.group === 'rf');
-  const otherTests = tests.filter(t => t.group === 'other');
-  const ungrouped = tests.filter(t => !t.group);
-
-  // Render ungrouped tests (Parts That Failed)
-  ungrouped.forEach(test => { html += renderSingleTest(test); });
-
-  // Render component table
-  if (componentTests.length) {
-    html += '<div class="component-table-wrap">';
-    html += '<h3>Component Repairs</h3>';
-    html += '<table class="component-table"><thead><tr><th>Component</th><th>Repaired?</th><th>Action</th><th>Status</th></tr></thead><tbody>';
-    componentTests.forEach(test => {
-      const param = test.param;
-      const submitted = fieldResults[param] || '';
-      const existing = existingStatus[param] || null;
-      const hasExisting = existing && existing.result !== 'CLEARED';
-      const selected = fieldSelections[param] || '';
-
-      html += '<tr>';
-      html += '<td class="comp-name">' + test.label + '</td>';
-
-      // Buttons / status cell
-      if (submitted) {
-        html += '<td><span class="comp-status ' + (submitted === 'YES' ? 'pass' : 'fail') + '">' + submitted + '</span></td>';
-        html += '<td><button class="comp-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></td>';
-        html += '<td><span class="comp-status pass">✓ Just now</span></td>';
-      } else if (hasExisting) {
-        html += '<td><div class="comp-btns">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="comp-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div></td>';
-        html += '<td><button class="comp-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" ' + (!selected ? 'disabled' : '') + '>Submit</button> <button class="comp-submit" onclick="showCompNote(\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button> <button class="comp-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></td>';
-        const cls = (existing.result === 'NO') ? 'fail' : 'pass';
-        html += '<td><span class="comp-status ' + cls + '">' + existing.result + '</span><br><span style="font-size:10px;color:#888;">' + existing.user + ' ' + existing.timestamp + '</span></td>';
-      } else if (existing && existing.result === 'CLEARED') {
-        html += '<td><div class="comp-btns">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="comp-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div></td>';
-        html += '<td><button class="comp-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" ' + (!selected ? 'disabled' : '') + '>Submit</button> <button class="comp-submit" onclick="showCompNote(\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></td>';
-        html += '<td><span style="font-size:11px;color:#6c757d;">⟳ Cleared</span></td>';
-      } else {
-        html += '<td><div class="comp-btns">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="comp-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div></td>';
-        html += '<td><button class="comp-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" ' + (!selected ? 'disabled' : '') + '>Submit</button> <button class="comp-submit" onclick="showCompNote(\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></td>';
-        html += '<td><span style="font-size:11px;color:#aaa;">—</span></td>';
-      }
-      html += '</tr>';
-      // Note row (hidden by default)
-      html += '<tr class="comp-note-row" id="compNote_' + param.replace(/[^a-zA-Z0-9]/g,'_') + '" style="display:none;"><td colspan="4" style="padding:8px 12px;background:#f0f4ff;"><div style="display:flex;gap:8px;align-items:center;"><input type="text" id="compNoteText_' + param.replace(/[^a-zA-Z0-9]/g,'_') + '" placeholder="Enter note..." style="flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;"><button class="comp-submit" onclick="submitCompWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')">Submit</button><button onclick="hideCompNote(\'' + param.replace(/[^a-zA-Z0-9]/g,'_') + '\')" style="padding:5px 10px;background:#e9ecef;border:none;border-radius:4px;font-size:11px;cursor:pointer;">Cancel</button></div></td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-
-  // Render RF group
-  if (rfTests.length) {
-    html += '<div class="component-table-wrap"><h3>RF Repair</h3>';
-    rfTests.forEach(test => { html += renderSingleTestInline(test); });
-    html += '</div>';
-  }
-
-  // Render Other group
-  if (otherTests.length) {
-    html += '<div class="component-table-wrap"><h3>Other Repair</h3>';
-    otherTests.forEach(test => { html += renderSingleTestInline(test); });
-    html += '</div>';
-  }
+  // Render all tests as individual sections
+  tests.forEach(test => { html += renderSingleTest(test); });
 
   container.innerHTML = html;
 }
 
 function renderSingleTest(test) {
   let html = '';
-  const param = test.param;
-  const submitted = fieldResults[param] || '';
-  const existing = existingStatus[param] || null;
+  const key = test.taskId;
+  const submitted = fieldResults[key] || '';
+  const existing = existingStatus[key] || null;
   const hasExisting = existing && existing.result !== 'CLEARED';
-  const selected = fieldSelections[param] || '';
-  const id = param.replace(/[^a-zA-Z0-9]/g, '_');
+  const selected = fieldSelections[key] || '';
+  const id = key.replace(/[^a-zA-Z0-9]/g, '_');
   const isText = test.type === 'text';
 
   html += '<div class="test-section show" id="sec_' + id + '">';
   html += '<h3>' + test.label + '</h3>';
-  html += '<div class="test-desc">' + param + '</div>';
+  html += '<div class="test-desc">' + test.param + '</div>';
 
   if (submitted) {
     html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
-    html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></div>';
+    html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button></div>';
   } else if (hasExisting) {
     const cls = (existing.result === 'FAIL' || existing.result === 'NO') ? 'fail' : 'pass';
     html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
     if (isText) {
-      html += '<div class="text-input-row"><input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')"></div>';
+      html += '<div class="text-input-row"><input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')"></div>';
     } else {
       html += '<div class="grade-options">';
-      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
+      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
       html += '</div>';
     }
-    html += '<div class="submit-row"><button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button><button class="btn-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></div>';
-    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    html += '<div class="submit-row"><button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button><button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button></div>';
+    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
   } else if (existing && existing.result === 'CLEARED') {
     html += '<div class="previous-result cleared">⟳ Cleared — needs re-test (' + existing.timestamp + ' by ' + existing.user + ')</div>';
     if (isText) {
-      html += '<div class="text-input-row"><input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')"></div>';
+      html += '<div class="text-input-row"><input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')"></div>';
     } else {
       html += '<div class="grade-options">';
-      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
+      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
       html += '</div>';
     }
-    html += '<div class="submit-row"><button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
-    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    html += '<div class="submit-row"><button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
+    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
   } else {
     if (isText) {
-      html += '<div class="text-input-row"><input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')"></div>';
+      html += '<div class="text-input-row"><input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')"></div>';
     } else {
       html += '<div class="grade-options">';
-      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
+      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
       html += '</div>';
     }
-    html += '<div class="submit-row"><button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
-    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    html += '<div class="submit-row"><button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
+    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
   }
   html += '</div>';
   return html;
 }
 
-function renderSingleTestInline(test) {
-  let html = '';
-  const param = test.param;
-  const submitted = fieldResults[param] || '';
-  const existing = existingStatus[param] || null;
-  const hasExisting = existing && existing.result !== 'CLEARED';
-  const selected = fieldSelections[param] || '';
-  const id = param.replace(/[^a-zA-Z0-9]/g, '_');
-  const isText = test.type === 'text';
-
-  html += '<div style="padding:12px 0;border-bottom:1px solid #eee;">';
-  html += '<div style="font-size:13px;font-weight:600;color:#1a3a5c;margin-bottom:6px;">' + test.label + '</div>';
-
-  if (submitted) {
-    html += '<div class="previous-result pass" style="margin-bottom:0;">✓ Submitted: ' + submitted + ' — just now</div>';
-    html += '<div style="margin-top:6px;text-align:right;"><button class="btn-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></div>';
-  } else if (hasExisting) {
-    const cls = (existing.result === 'FAIL' || existing.result === 'NO') ? 'fail' : 'pass';
-    html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
-    if (isText) {
-      html += '<textarea id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" rows="3" style="width:100%;padding:8px 10px;border:2px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;overflow-y:auto;margin-bottom:8px;" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">' + (selected || '') + '</textarea>';
-      html += '<div class="submit-row" style="justify-content:flex-end;"><button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button><button class="btn-clear" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></div>';
-    } else {
-      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-      html += '<div class="grade-options" style="margin-bottom:0;">';
-      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
-      html += '</div>';
-      html += '<div style="margin-left:auto;display:flex;gap:6px;"><button class="btn-submit" style="padding:6px 12px;font-size:11px;" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" style="padding:6px 12px;font-size:11px;" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button><button class="btn-clear" style="padding:6px 12px;font-size:11px;" onclick="clearTest(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button></div>';
-      html += '</div>';
-    }
-    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-  } else if (existing && existing.result === 'CLEARED') {
-    html += '<div class="previous-result cleared">⟳ Cleared (' + existing.timestamp + ' by ' + existing.user + ')</div>';
-    if (isText) {
-      html += '<textarea id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" rows="3" style="width:100%;padding:8px 10px;border:2px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;overflow-y:auto;margin-bottom:8px;" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">' + (selected || '') + '</textarea>';
-      html += '<div class="submit-row" style="justify-content:flex-end;"><button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
-    } else {
-      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-      html += '<div class="grade-options" style="margin-bottom:0;">';
-      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
-      html += '</div>';
-      html += '<div style="margin-left:auto;display:flex;gap:6px;"><button class="btn-submit" style="padding:6px 12px;font-size:11px;" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" style="padding:6px 12px;font-size:11px;" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
-      html += '</div>';
-    }
-    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-  } else {
-    if (isText) {
-      html += '<textarea id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" rows="3" style="width:100%;padding:8px 10px;border:2px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;overflow-y:auto;margin-bottom:8px;" oninput="selectText(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">' + (selected || '') + '</textarea>';
-      html += '<div class="submit-row" style="justify-content:flex-end;"><button class="btn-submit" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
-    } else {
-      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-      html += '<div class="grade-options" style="margin-bottom:0;">';
-      test.options.forEach(g => { const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : ''); html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + param.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>'; });
-      html += '</div>';
-      html += '<div style="margin-left:auto;display:flex;gap:6px;"><button class="btn-submit" style="padding:6px 12px;font-size:11px;" onclick="submitTest(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button><button class="btn-submit-note" style="padding:6px 12px;font-size:11px;" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button></div>';
-      html += '</div>';
-    }
-    html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + param.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function selectGrade(param, grade) {
-  fieldSelections[param] = grade;
+function selectGrade(key, grade) {
+  fieldSelections[key] = grade;
   renderTests();
 }
 
@@ -499,31 +387,31 @@ function hideCompNote(id) {
   document.getElementById('compNoteText_' + id).value = '';
 }
 
-async function submitCompWithNote(param, id) {
+async function submitCompWithNote(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  const result = fieldSelections[param];
+  const result = fieldSelections[key];
   if (!result) return;
   const note = document.getElementById('compNoteText_' + id).value.trim();
   if (!note) { showToast('Enter a note or use Submit', 'error'); return; }
 
-  fieldResults[param] = result;
+  fieldResults[key] = result;
   renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
       action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
-      parameter: param, result: result, user: operator, note: note
+      taskid: key, result: result, user: operator, note: note
     });
-    showToast(param + ' submitted: ' + result, 'success');
+    const test = TESTS.find(t => t.taskId === key);
+    showToast((test ? test.label : key) + ' submitted: ' + result, 'success');
   } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 
-function selectText(param, id) {
+function selectText(key, id) {
   const el = document.getElementById('input_' + id);
   if (el) {
-    fieldSelections[param] = el.value;
-    // Enable/disable submit buttons without full re-render to keep cursor position
+    fieldSelections[key] = el.value;
     const sec = document.getElementById('sec_' + id);
     if (sec) {
       const btns = sec.querySelectorAll('.btn-submit, .btn-submit-note');
@@ -540,15 +428,14 @@ function hideNote(id) {
   document.getElementById('note_' + id).classList.remove('show');
 }
 
-async function submitTest(param, id) {
+async function submitTest(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  let result = fieldSelections[param];
+  let result = fieldSelections[key];
   if (!result || !result.trim()) return;
   result = result.trim();
 
-  // Validate BSOH percentage fields
-  const test = TESTS.find(t => t.param === param);
+  const test = TESTS.find(t => t.taskId === key);
   if (test && test.unit === '%') {
     const num = parseFloat(result);
     if (isNaN(num) || num < 0 || num > 100) {
@@ -558,7 +445,7 @@ async function submitTest(param, id) {
     result = num + '%';
   }
 
-  fieldResults[param] = result;
+  fieldResults[key] = result;
   renderTests();
 
   try {
@@ -566,7 +453,7 @@ async function submitTest(param, id) {
       action: 'logtest',
       imei: currentDevice['IMEI'],
       page: PAGE_NAME,
-      parameter: param,
+      taskid: key,
       result: result,
       user: operator,
       note: ''
@@ -577,17 +464,16 @@ async function submitTest(param, id) {
   }
 }
 
-async function submitTestWithNote(param, id) {
+async function submitTestWithNote(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  let result = fieldSelections[param];
+  let result = fieldSelections[key];
   if (!result || !result.trim()) return;
   result = result.trim();
   const note = document.getElementById('noteText_' + id).value.trim();
   if (!note) { showToast('Enter a note or use Submit Result', 'error'); return; }
 
-  // Validate BSOH percentage fields
-  const test = TESTS.find(t => t.param === param);
+  const test = TESTS.find(t => t.taskId === key);
   if (test && test.unit === '%') {
     const num = parseFloat(result);
     if (isNaN(num) || num < 0 || num > 100) {
@@ -597,7 +483,7 @@ async function submitTestWithNote(param, id) {
     result = num + '%';
   }
 
-  fieldResults[param] = result;
+  fieldResults[key] = result;
   renderTests();
 
   try {
@@ -605,7 +491,7 @@ async function submitTestWithNote(param, id) {
       action: 'logtest',
       imei: currentDevice['IMEI'],
       page: PAGE_NAME,
-      parameter: param,
+      taskid: key,
       result: result,
       user: operator,
       note: note
@@ -616,13 +502,13 @@ async function submitTestWithNote(param, id) {
   }
 }
 
-async function clearTest(param) {
+async function clearTest(key) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
 
-  delete fieldResults[param];
-  delete fieldSelections[param];
-  delete existingStatus[param];
+  delete fieldResults[key];
+  delete fieldSelections[key];
+  delete existingStatus[key];
   renderTests();
 
   try {
@@ -630,12 +516,13 @@ async function clearTest(param) {
       action: 'logtest',
       imei: currentDevice['IMEI'],
       page: PAGE_NAME,
-      parameter: param,
+      taskid: key,
       result: 'CLEARED',
       user: operator,
       note: ''
     });
-    showToast(TESTS.find(t=>t.param===param)?.label + ' cleared', 'warning');
+    const test = TESTS.find(t => t.taskId === key);
+    showToast((test ? test.label : key) + ' cleared', 'warning');
   } catch(err) {
     showToast('Error: ' + err.message, 'error');
   }

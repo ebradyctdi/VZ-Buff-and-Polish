@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VZ Buff &amp; Polish - Buff &amp; Polish</title>
+<title>VZ Buff &amp; Polish - Initial Cosmetic Grading</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
@@ -67,10 +67,6 @@
   .grade-btn:hover { border-color: #1a3a5c; background: #f0f4ff; }
   .grade-btn.selected { border-color: #0d6efd; background: #e7f1ff; color: #0d6efd; transform: scale(1.05); }
   .grade-btn.dimmed { opacity: 0.4; }
-  .text-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
-  .text-input-row input { flex: 1; max-width: 300px; padding: 10px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
-  .text-input-row input:focus { outline: none; border-color: #1a3a5c; }
-  .text-input-row .unit-label { font-size: 13px; color: #666; font-weight: 500; }
   .submit-row { display: flex; gap: 8px; align-items: center; }
   .submit-row .btn-submit { padding: 8px 16px; background: #0d6efd; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
   .submit-row .btn-submit:hover { background: #0b5ed7; }
@@ -96,8 +92,6 @@
     .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
     .scan-row { flex-direction: column; }
     .scan-row input, .scan-row button { width: 100%; }
-    .text-input-row { flex-direction: column; align-items: stretch; }
-    .text-input-row input { max-width: 100%; }
   }
   @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
 </style>
@@ -115,14 +109,14 @@
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
     <div class="nav-group">
       <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
-      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="initial-cosmetic-grading.html" class="active"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
       <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
       <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
       <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
-      <a href="buff-and-polish.html" class="active"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
       <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
     </div>
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
@@ -144,7 +138,7 @@
 <div class="main-wrap">
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <div class="header">
-    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Buff &amp; Polish</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Initial Cosmetic Grading</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
     <div class="header-right">
       <span class="status-dot disconnected" id="statusDot"></span>
       <span class="status-label" id="statusLabel">Not connected</span>
@@ -174,7 +168,7 @@
 </html>
 <script>
 const URL_KEY = 'vzbnp_script_url';
-const PAGE_NAME = 'Buff & Polish';
+const PAGE_NAME = 'Initial Cosmetic Grading';
 let scriptUrl = '';
 let currentDevice = null;
 let existingStatus = {};
@@ -300,80 +294,53 @@ function renderTests() {
     const hasExisting = existing && existing.result !== 'CLEARED';
     const selected = fieldSelections[key] || '';
     const id = key.replace(/[^a-zA-Z0-9]/g, '_');
-    const isText = test.type === 'text';
 
     html += '<div class="test-section show" id="sec_' + id + '">';
     html += '<h3>' + test.label + '</h3>';
-    html += '<div class="test-desc">' + test.param + '</div>';
+    html += '<div class="test-desc">Select the grade that applies</div>';
 
+    // Show previous/current result
     if (submitted) {
       html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
       html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button></div>';
     } else if (hasExisting) {
-      const cls = (existing.result === 'FAIL' || existing.result === 'NO') ? 'fail' : 'pass';
+      const cls = existing.result === 'FAIL' ? 'fail' : 'pass';
       html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
-
-      if (isText) {
-        html += '<div class="text-input-row">';
-        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
-        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
-        html += '</div>';
-      } else {
-        html += '<div class="grade-options">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div>';
-      }
-
+      html += '<div class="grade-options">';
+      test.options.forEach(g => {
+        const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
+        html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
+      });
+      html += '</div>';
       html += '<div class="submit-row">';
-      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
       html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
       html += '<button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button>';
       html += '</div>';
       html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-
     } else if (existing && existing.result === 'CLEARED') {
-      html += '<div class="previous-result cleared">⟳ Cleared — needs re-test (' + existing.timestamp + ' by ' + existing.user + ')</div>';
-
-      if (isText) {
-        html += '<div class="text-input-row">';
-        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
-        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
-        html += '</div>';
-      } else {
-        html += '<div class="grade-options">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div>';
-      }
-
+      html += '<div class="previous-result cleared">⟳ Cleared — needs re-grade (' + existing.timestamp + ' by ' + existing.user + ')</div>';
+      html += '<div class="grade-options">';
+      test.options.forEach(g => {
+        const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
+        html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
+      });
+      html += '</div>';
       html += '<div class="submit-row">';
-      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
       html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
       html += '</div>';
       html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-
     } else {
-      if (isText) {
-        html += '<div class="text-input-row">';
-        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
-        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
-        html += '</div>';
-      } else {
-        html += '<div class="grade-options">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div>';
-      }
-
+      // No previous result
+      html += '<div class="grade-options">';
+      test.options.forEach(g => {
+        const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
+        html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
+      });
+      html += '</div>';
       html += '<div class="submit-row">';
-      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
       html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
       html += '</div>';
       html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
@@ -389,18 +356,6 @@ function selectGrade(key, grade) {
   renderTests();
 }
 
-function selectText(key, id) {
-  const el = document.getElementById('input_' + id);
-  if (el) {
-    fieldSelections[key] = el.value;
-    const sec = document.getElementById('sec_' + id);
-    if (sec) {
-      const btns = sec.querySelectorAll('.btn-submit, .btn-submit-note');
-      btns.forEach(b => { b.disabled = !el.value.trim(); });
-    }
-  }
-}
-
 function showNote(id) {
   document.getElementById('note_' + id).classList.add('show');
   document.getElementById('noteText_' + id).focus();
@@ -409,22 +364,11 @@ function hideNote(id) {
   document.getElementById('note_' + id).classList.remove('show');
 }
 
-async function submitTest(key, id) {
+async function submitTest(key) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  let result = fieldSelections[key];
-  if (!result || !result.trim()) return;
-  result = result.trim();
-
-  const test = TESTS.find(t => t.taskId === key);
-  if (test && test.unit === '%') {
-    const num = parseFloat(result);
-    if (isNaN(num) || num < 0 || num > 100) {
-      showToast('Enter a valid percentage (0-100)', 'error');
-      return;
-    }
-    result = num + '%';
-  }
+  const result = fieldSelections[key];
+  if (!result) return;
 
   fieldResults[key] = result;
   renderTests();
@@ -439,7 +383,7 @@ async function submitTest(key, id) {
       user: operator,
       note: ''
     });
-    showToast('Result submitted: ' + result, 'success');
+    showToast('Grade submitted: ' + result, 'success');
   } catch(err) {
     showToast('Error: ' + err.message, 'error');
   }
@@ -448,21 +392,10 @@ async function submitTest(key, id) {
 async function submitTestWithNote(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  let result = fieldSelections[key];
-  if (!result || !result.trim()) return;
-  result = result.trim();
+  const result = fieldSelections[key];
+  if (!result) return;
   const note = document.getElementById('noteText_' + id).value.trim();
   if (!note) { showToast('Enter a note or use Submit Result', 'error'); return; }
-
-  const test = TESTS.find(t => t.taskId === key);
-  if (test && test.unit === '%') {
-    const num = parseFloat(result);
-    if (isNaN(num) || num < 0 || num > 100) {
-      showToast('Enter a valid percentage (0-100)', 'error');
-      return;
-    }
-    result = num + '%';
-  }
 
   fieldResults[key] = result;
   renderTests();
@@ -477,7 +410,7 @@ async function submitTestWithNote(key, id) {
       user: operator,
       note: note
     });
-    showToast('Result submitted: ' + result, 'success');
+    showToast('Grade submitted: ' + result, 'success');
   } catch(err) {
     showToast('Error: ' + err.message, 'error');
   }

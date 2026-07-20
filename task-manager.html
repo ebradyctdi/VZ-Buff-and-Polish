@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VZ Buff &amp; Polish - Task Manager</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1a3a5c; color: white; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; }
+  .sidebar-brand { padding: 20px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-brand .sub { font-size: 13px; opacity: 0.9; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+  .sidebar-nav::-webkit-scrollbar { width: 6px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: white; }
+  .sidebar-nav a.active { background: rgba(255,255,255,0.12); color: white; border-left-color: #fff; }
+  .sidebar-nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-nav .nav-section { font-size: 12px; text-transform: uppercase; color: rgba(255,255,255,0.85); padding: 16px 16px 8px; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: 600; }
+  .sidebar-nav .nav-section:hover { color: white; background: rgba(255,255,255,0.05); }
+  .sidebar-nav .nav-group { display: none; }
+  .sidebar-nav .nav-group.open { display: block; }
+  .main-wrap { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; width: 100%; }
+
+  /* Status indicator */
+  .status-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 20px; font-size: 13px; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #dc3545; }
+  .status-dot.connected { background: #28a745; }
+
+  /* Table card */
+  .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .card h2 { font-size: 16px; color: #1a3a5c; margin-bottom: 16px; }
+
+  .task-table-wrap { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+  .task-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .task-table thead { position: sticky; top: 0; z-index: 10; }
+  .task-table th { background: #1a3a5c; color: white; padding: 10px 8px; text-align: left; font-weight: 600; white-space: nowrap; }
+  .task-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
+  .task-table tr:nth-child(even) { background: #f8f9fa; }
+  .task-table tr:hover { background: #e9f0f7; }
+
+  .btn { padding: 6px 12px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-edit { background: #0d6efd; color: white; }
+  .btn-edit:hover { background: #0b5ed7; }
+  .btn-delete { background: #dc3545; color: white; }
+  .btn-delete:hover { background: #bb2d3b; }
+  .btn-save { padding: 10px 24px; background: #1a3a5c; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-save:hover { background: #2c5f8a; }
+  .btn-clear { padding: 10px 24px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-left: 8px; }
+  .btn-clear:hover { background: #5a6268; }
+  .btn-refresh { padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-refresh:hover { background: #218838; }
+
+  .badge-yes { background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-no { background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full-width { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .form-group input, .form-group select { padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: #1a3a5c; box-shadow: 0 0 0 2px rgba(26,58,92,0.1); }
+  .form-group input[readonly] { background: #f0f2f5; color: #666; }
+
+  #toast { position: fixed; top: 80px; right: 30px; padding: 14px 24px; border-radius: 6px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 400; transform: translateX(120%); transition: transform 0.3s ease; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 300; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+    .sidebar-overlay.show { display: block; }
+    .main-wrap { margin-left: 0; }
+    .header { padding: 12px 16px; }
+    .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
+  <div class="sidebar-nav">
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
+    <div class="nav-group">
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
+    <div class="nav-group">
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
+    <div class="nav-group">
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html" class="active"><span class="icon">&#x1F4DD;</span> Task Manager</a>
+    </div>
+  </div>
+</nav>
+<div class="main-wrap">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="header">
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Task Manager</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+  </div>
+  <div class="container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Disconnected</span>
+    </div>
+
+    <!-- Task List Table -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 style="margin-bottom:0;">Configured Tasks</h2>
+        <button class="btn-refresh" onclick="loadTasks()">🔄 Refresh</button>
+      </div>
+      <div class="task-table-wrap">
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>Task ID</th>
+              <th>Label</th>
+              <th>Page</th>
+              <th>Result Type</th>
+              <th>CPO</th>
+              <th>CLNR</th>
+              <th>Sort</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="taskTableBody">
+            <tr><td colspan="9" style="text-align:center;color:#999;padding:24px;">Loading tasks...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add/Edit Task Form -->
+    <div class="card">
+      <h2 id="formTitle">Add New Task</h2>
+      <div class="form-grid" style="margin-top:16px;">
+        <div class="form-group">
+          <label for="fTaskId">Task ID</label>
+          <input type="text" id="fTaskId" placeholder="e.g. FUNC_01">
+        </div>
+        <div class="form-group">
+          <label for="fTaskName">Task Name</label>
+          <input type="text" id="fTaskName" placeholder="Full task name">
+        </div>
+        <div class="form-group">
+          <label for="fLabel">Label</label>
+          <input type="text" id="fLabel" placeholder="Short display name">
+        </div>
+        <div class="form-group">
+          <label for="fSubmenu">Submenu</label>
+          <select id="fSubmenu">
+            <option value="">-- Select --</option>
+            <option value="Unit Intake & Grading">Unit Intake &amp; Grading</option>
+            <option value="Unit Services">Unit Services</option>
+            <option value="Final Results">Final Results</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fPage">Page</label>
+          <select id="fPage">
+            <option value="">-- Select --</option>
+            <option value="Unit Validation">Unit Validation</option>
+            <option value="Initial Cosmetic Grading">Initial Cosmetic Grading</option>
+            <option value="Customer Information">Customer Information</option>
+            <option value="Initial Functional Testing">Initial Functional Testing</option>
+            <option value="Repair">Repair</option>
+            <option value="Buff & Polish">Buff &amp; Polish</option>
+            <option value="Paint">Paint</option>
+            <option value="Final Functional Testing">Final Functional Testing</option>
+            <option value="Final Cosmetic Grading">Final Cosmetic Grading</option>
+            <option value="QC">QC</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fResultType">Result Type</label>
+          <select id="fResultType" onchange="toggleOptions()">
+            <option value="">-- Select --</option>
+            <option value="PASS/FAIL">PASS/FAIL</option>
+            <option value="PASS/FAIL/NA">PASS/FAIL/NA</option>
+            <option value="YES/NO">YES/NO</option>
+            <option value="YES/NO/NA">YES/NO/NA</option>
+            <option value="YES/NO/NOT REQUIRED">YES/NO/NOT REQUIRED</option>
+            <option value="FREE TEXT">FREE TEXT</option>
+            <option value="PERCENTAGE">PERCENTAGE</option>
+            <option value="DROPDOWN">DROPDOWN</option>
+          </select>
+        </div>
+        <div class="form-group" id="optionsGroup" style="display:none;">
+          <label for="fOptions">Options (comma separated)</label>
+          <input type="text" id="fOptions" placeholder="Option1, Option2, Option3">
+        </div>
+        <div class="form-group">
+          <label for="fCPO">CPO</label>
+          <select id="fCPO">
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fCLNR">CLNR</label>
+          <select id="fCLNR">
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fSortOrder">Sort Order</label>
+          <input type="number" id="fSortOrder" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label for="fActive">Active</label>
+          <select id="fActive">
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn-save" onclick="saveTask()">💾 Save Task</button>
+        <button class="btn-clear" onclick="clearForm()">✖ Clear Form</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+</body>
+</html>
+
+<script>
+const URL_KEY = 'vzbnp_script_url';
+let scriptUrl = '';
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
+
+let allTasks = [];
+let isEditing = false;
+
+// --- JSONP ---
+let _jsonpCounter = 0;
+function jsonpRequest(url, params) {
+  return new Promise((resolve, reject) => {
+    const cb = '_jsonpCb_' + (++_jsonpCounter) + '_' + Date.now();
+    const qs = Object.entries(params||{}).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = url + sep + 'callback=' + cb + (qs ? '&' + qs : '');
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 15000);
+    function cleanup() { clearTimeout(timeout); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    const s = document.createElement('script');
+    s.src = fullUrl; s.onerror = function() { cleanup(); reject(new Error('Network error')); };
+    document.head.appendChild(s);
+  });
+}
+
+// --- Status ---
+function setStatus(connected) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  if (connected) {
+    dot.classList.add('connected');
+    text.textContent = 'Connected';
+  } else {
+    dot.classList.remove('connected');
+    text.textContent = 'Disconnected';
+  }
+}
+
+// --- Load Tasks ---
+async function loadTasks() {
+  if (!scriptUrl) { showToast('No script URL configured. Go to Settings.', 'error'); return; }
+  const tbody = document.getElementById('taskTableBody');
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:24px;">Loading...</td></tr>';
+
+  try {
+    const json = await jsonpRequest(scriptUrl, { action: 'readtasks' });
+    if (json.success && Array.isArray(json.data)) {
+      allTasks = json.data;
+      setStatus(true);
+      renderTable();
+    } else {
+      setStatus(false);
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#dc3545;padding:24px;">Error: ' + (json.error || 'Unknown error') + '</td></tr>';
+      showToast('Failed to load tasks', 'error');
+    }
+  } catch(err) {
+    setStatus(false);
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#dc3545;padding:24px;">Connection failed: ' + err.message + '</td></tr>';
+    showToast('Connection failed', 'error');
+  }
+}
+
+// --- Render Table ---
+function renderTable() {
+  const tbody = document.getElementById('taskTableBody');
+  if (allTasks.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:24px;">No tasks configured yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allTasks.map(t => `
+    <tr>
+      <td><strong>${esc(t['Task ID']||'')}</strong></td>
+      <td>${esc(t['Label']||'')}</td>
+      <td>${esc(t['Page']||'')}</td>
+      <td>${esc(t['Result Type']||'')}</td>
+      <td><span class="badge-${(t['CPO']||'').toLowerCase()==='yes'?'yes':'no'}">${esc(t['CPO']||'')}</span></td>
+      <td><span class="badge-${(t['CLNR']||'').toLowerCase()==='yes'?'yes':'no'}">${esc(t['CLNR']||'')}</span></td>
+      <td>${esc(String(t['Sort Order']||0))}</td>
+      <td><span class="badge-${(t['Active']||'').toLowerCase()==='yes'?'yes':'no'}">${esc(t['Active']||'')}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-edit" onclick="editTask('${esc(t['Task ID']||'')}')">✏️ Edit</button>
+        <button class="btn btn-delete" onclick="deleteTask('${esc(t['Task ID']||'')}')">🗑️ Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// --- Save Task ---
+async function saveTask() {
+  const taskId = document.getElementById('fTaskId').value.trim();
+  const taskName = document.getElementById('fTaskName').value.trim();
+  const label = document.getElementById('fLabel').value.trim();
+  const submenu = document.getElementById('fSubmenu').value;
+  const page = document.getElementById('fPage').value;
+  const resultType = document.getElementById('fResultType').value;
+  const options = document.getElementById('fOptions').value.trim();
+  const cpo = document.getElementById('fCPO').value;
+  const clnr = document.getElementById('fCLNR').value;
+  const sortOrder = document.getElementById('fSortOrder').value || '0';
+  const active = document.getElementById('fActive').value;
+
+  if (!taskId || !taskName || !label || !page || !resultType) {
+    showToast('Please fill in all required fields', 'error');
+    return;
+  }
+  if (resultType === 'DROPDOWN' && !options) {
+    showToast('Please enter options for DROPDOWN type', 'error');
+    return;
+  }
+
+  const params = {
+    action: 'savetask',
+    taskId, taskName, label, submenu, page, resultType, options, cpo, clnr, sortOrder, active
+  };
+
+  try {
+    const json = await jsonpRequest(scriptUrl, params);
+    if (json.success) {
+      showToast(isEditing ? 'Task updated!' : 'Task created!', 'success');
+      clearForm();
+      loadTasks();
+    } else {
+      showToast('Error: ' + (json.error || 'Save failed'), 'error');
+    }
+  } catch(err) {
+    showToast('Save failed: ' + err.message, 'error');
+  }
+}
+
+// --- Edit Task ---
+function editTask(taskId) {
+  const task = allTasks.find(t => (t['Task ID']) === taskId);
+  if (!task) { showToast('Task not found', 'error'); return; }
+
+  isEditing = true;
+  document.getElementById('formTitle').textContent = 'Edit Task: ' + taskId;
+  document.getElementById('fTaskId').value = task['Task ID'] || '';
+  document.getElementById('fTaskId').readOnly = true;
+  document.getElementById('fTaskName').value = task['Task Name'] || '';
+  document.getElementById('fLabel').value = task['Label'] || '';
+  document.getElementById('fSubmenu').value = task['Submenu'] || '';
+  document.getElementById('fPage').value = task['Page'] || '';
+  document.getElementById('fResultType').value = task['Result Type'] || '';
+  document.getElementById('fOptions').value = task['Options'] || '';
+  document.getElementById('fCPO').value = task['CPO'] || 'Yes';
+  document.getElementById('fCLNR').value = task['CLNR'] || 'Yes';
+  document.getElementById('fSortOrder').value = task['Sort Order'] || 0;
+  document.getElementById('fActive').value = task['Active'] || 'Yes';
+
+  toggleOptions();
+  document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+}
+
+// --- Delete Task ---
+async function deleteTask(taskId) {
+  if (!confirm('Are you sure you want to delete task "' + taskId + '"?')) return;
+
+  try {
+    const json = await jsonpRequest(scriptUrl, { action: 'deletetask', taskId });
+    if (json.success) {
+      showToast('Task deleted', 'success');
+      loadTasks();
+    } else {
+      showToast('Error: ' + (json.error || 'Delete failed'), 'error');
+    }
+  } catch(err) {
+    showToast('Delete failed: ' + err.message, 'error');
+  }
+}
+
+// --- Clear Form ---
+function clearForm() {
+  isEditing = false;
+  document.getElementById('formTitle').textContent = 'Add New Task';
+  document.getElementById('fTaskId').value = '';
+  document.getElementById('fTaskId').readOnly = false;
+  document.getElementById('fTaskName').value = '';
+  document.getElementById('fLabel').value = '';
+  document.getElementById('fSubmenu').value = '';
+  document.getElementById('fPage').value = '';
+  document.getElementById('fResultType').value = '';
+  document.getElementById('fOptions').value = '';
+  document.getElementById('fCPO').value = 'Yes';
+  document.getElementById('fCLNR').value = 'Yes';
+  document.getElementById('fSortOrder').value = '';
+  document.getElementById('fActive').value = 'Yes';
+  toggleOptions();
+}
+
+// --- Toggle Options field ---
+function toggleOptions() {
+  const rt = document.getElementById('fResultType').value;
+  document.getElementById('optionsGroup').style.display = (rt === 'DROPDOWN') ? '' : 'none';
+}
+
+// --- Toast ---
+function showToast(msg, type) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.style.background = type==='success'?'#28a745':type==='error'?'#dc3545':'#fd7e14';
+  t.style.transform = 'translateX(0)';
+  setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 2500);
+}
+
+// --- Sidebar ---
+function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+function toggleNavGroup(el) {
+  var group = el.nextElementSibling;
+  if (group && group.classList.contains('nav-group')) {
+    group.classList.toggle('open');
+    el.textContent = (group.classList.contains('open') ? '▼ ' : '▶ ') + el.textContent.replace(/^[▶▼] /, '');
+  }
+}
+document.querySelectorAll('.nav-group').forEach(function(g) {
+  if (g.querySelector('a.active')) {
+    g.classList.add('open');
+    var hdr = g.previousElementSibling;
+    if (hdr) hdr.textContent = hdr.textContent.replace('▶', '▼');
+  }
+});
+
+// --- Init ---
+loadTasks();
+</script>
+</html>

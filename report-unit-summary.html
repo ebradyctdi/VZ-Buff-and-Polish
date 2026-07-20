@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VZ Buff &amp; Polish - Unit Summary Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1a3a5c; color: white; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; }
+  .sidebar-brand { padding: 20px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-brand .sub { font-size: 13px; opacity: 0.9; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+  .sidebar-nav::-webkit-scrollbar { width: 6px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: white; }
+  .sidebar-nav a.active { background: rgba(255,255,255,0.12); color: white; border-left-color: #fff; }
+  .sidebar-nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-nav .nav-section { font-size: 12px; text-transform: uppercase; color: rgba(255,255,255,0.85); padding: 16px 16px 8px; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: 600; }
+  .sidebar-nav .nav-section:hover { color: white; background: rgba(255,255,255,0.05); }
+  .sidebar-nav .nav-group { display: none; }
+  .sidebar-nav .nav-group.open { display: block; }
+</style>
+<style>
+  .main-wrap { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .status-dot.connected { background: #28a745; }
+  .status-dot.disconnected { background: #dc3545; }
+  .status-dot.pending { background: #fd7e14; }
+  .status-label { font-size: 11px; color: rgba(255,255,255,0.8); margin-left: 4px; }
+  .container { max-width: 100%; margin: 0 auto; padding: 24px; width: 100%; }
+</style>
+<style>
+  .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .btn { padding: 8px 18px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-primary { background: #0d6efd; color: white; }
+  .btn-primary:hover { background: #0b5ed7; }
+  .btn-success { background: #28a745; color: white; }
+  .btn-success:hover { background: #218838; }
+</style>
+<style>
+  .filter-row { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-row input, .filter-row select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+  .filter-row input { width: 200px; }
+  .filter-row label { font-size: 12px; font-weight: 600; color: #555; }
+  .record-count { font-size: 12px; color: #666; margin-left: auto; }
+
+  .summary-table-wrap { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; position: relative; }
+  .summary-table-scroll { overflow-x: auto; overflow-y: auto; max-height: 72vh; scrollbar-width: thin; }
+  .summary-table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .summary-table-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+
+  .summary-table { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+  .summary-table th { background: #1a3a5c; color: white; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; position: sticky; top: 0; z-index: 10; }
+  .summary-table td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
+  .summary-table tr:nth-child(even) { background: #f8f9fb; }
+  .summary-table tr:hover { background: #eef3f8; }
+  .summary-table .col-imei { position: sticky; left: 0; z-index: 5; background: inherit; font-family: Consolas, monospace; font-weight: 600; min-width: 140px; }
+  .summary-table th.col-imei { z-index: 15; left: 0; }
+
+  .result-pass { color: #28a745; font-weight: 600; }
+  .result-fail { color: #dc3545; font-weight: 600; }
+  .result-other { color: #6c757d; }
+  .result-empty { color: #ccc; }
+
+  .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
+  .status-badge.not-started { background: #e9ecef; color: #6c757d; }
+  .status-badge.in-process { background: #fff3cd; color: #856404; }
+  .status-badge.awaiting-qc { background: #cce5ff; color: #004085; }
+  .status-badge.completed { background: #d4edda; color: #155724; }
+
+  #toast { position: fixed; top: 80px; right: 30px; padding: 14px 24px; border-radius: 6px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 400; transform: translateX(120%); transition: transform 0.3s ease; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 300; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+    .sidebar-overlay.show { display: block; }
+    .main-wrap { margin-left: 0; }
+    .header { padding: 12px 16px; }
+    .header h1 { font-size: 16px; }
+    .container { padding: 16px; }
+    .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
+  }
+  @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
+  <div class="sidebar-nav">
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
+    <div class="nav-group">
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html" class="active"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
+    <div class="nav-group">
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
+    <div class="nav-group">
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
+    </div>
+  </div>
+</nav>
+<div class="main-wrap">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="header">
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">&#9776;</button><div><h1>Unit Summary Report</h1><div class="header-sub">CTDI &#8212; VZ Buff &amp; Polish</div></div></div>
+    <div class="header-right">
+      <span class="status-dot disconnected" id="statusDot"></span>
+      <span class="status-label" id="statusLabel">Not connected</span>
+    </div>
+  </div>
+  <div class="container">
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="loadReport()">&#x1F504; Load Report</button>
+      <button class="btn btn-success" onclick="exportCSV()">&#x1F4E5; Export CSV</button>
+    </div>
+    <div class="filter-row">
+      <label>Order Type:</label>
+      <select id="filterOrderType" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="CPO">CPO</option>
+        <option value="CLNR">CLNR</option>
+      </select>
+      <label>Status:</label>
+      <select id="filterStatus" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="Not Started">Not Started</option>
+        <option value="In Process">In Process</option>
+        <option value="Awaiting QC">Awaiting QC</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <label>IMEI:</label>
+      <input type="text" id="filterIMEI" placeholder="Search IMEI..." oninput="applyFilters()">
+      <span class="record-count" id="recordCount">Showing 0 of 0 units</span>
+    </div>
+    <div class="summary-table-wrap">
+      <div class="summary-table-scroll">
+        <table class="summary-table" id="summaryTable">
+          <thead id="tableHead"><tr><th class="col-imei">IMEI</th><th>OEM</th><th>SKU</th><th>Model</th><th>Order Type</th><th>DISPO IN</th><th>Status</th><th>QC Result</th></tr></thead>
+          <tbody id="tableBody">
+            <tr><td colspan="8" style="text-align:center;padding:30px;color:#aaa;">Click "Load Report" to fetch data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+</body>
+</html>
+<script>
+const URL_KEY = 'vzbnp_script_url';
+let scriptUrl = '';
+let allDevices = [], allStatuses = {}, allTaskConfig = [];
+let filteredData = [];
+let dynamicTaskColumns = [];
+let _jsonpCounter = 0;
+
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
+
+// --- Navigation ---
+function toggleNavGroup(el) {
+  const group = el.nextElementSibling;
+  if (group && group.classList.contains('nav-group')) {
+    group.classList.toggle('open');
+    el.innerHTML = (group.classList.contains('open') ? '&#9660; ' : '&#9654; ') + el.textContent.trim().substring(2);
+  }
+}
+function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+// Auto-open nav group for active link
+document.addEventListener('DOMContentLoaded', function() {
+  const active = document.querySelector('.sidebar-nav a.active');
+  if (active) {
+    const group = active.closest('.nav-group');
+    if (group) { group.classList.add('open'); const sec = group.previousElementSibling; if (sec) sec.innerHTML = '&#9660; ' + sec.textContent.trim().substring(2); }
+  }
+});
+
+// --- Toast ---
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#0d6efd';
+  t.style.transform = 'translateX(0)';
+  setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 3500);
+}
+
+// --- Status ---
+function setStatus(state, label) {
+  document.getElementById('statusDot').className = 'status-dot ' + state;
+  document.getElementById('statusLabel').textContent = label;
+}
+
+// --- JSONP ---
+function jsonpRequest(url, params) {
+  return new Promise((resolve, reject) => {
+    const cb = '_jsonpCb_' + (++_jsonpCounter) + '_' + Date.now();
+    const qs = Object.entries(params||{}).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = url + sep + 'callback=' + cb + (qs ? '&' + qs : '');
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Timed out')); }, 30000);
+    function cleanup() { clearTimeout(timeout); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    const s = document.createElement('script');
+    s.src = fullUrl; s.onerror = function() { cleanup(); reject(new Error('Network error')); };
+    document.head.appendChild(s);
+  });
+}
+
+// --- Unit Status Logic ---
+function getRequiredTaskIds(orderType) {
+  return allTaskConfig
+    .filter(t => t['Active'] === 'Yes' && (orderType === 'CLNR' ? t['CLNR'] === 'Yes' : t['CPO'] === 'Yes'))
+    .map(t => t['Task ID']);
+}
+
+function getUnitStatus(imei, orderType) {
+  const statuses = allStatuses[imei];
+  if (!statuses) return 'Not Started';
+  const required = getRequiredTaskIds(orderType);
+  const completed = required.filter(p => statuses[p] && statuses[p].result !== 'CLEARED').length;
+  if (completed === 0) return 'Not Started';
+  const qc = statuses['QC_RESULT'];
+  const qcPassed = qc && qc.result === 'PASS';
+  if (qcPassed) return 'Completed';
+  if (completed >= required.length) return 'Awaiting QC';
+  return 'In Process';
+}
+
+// --- Load Report ---
+async function loadReport() {
+  if (!scriptUrl) { setStatus('disconnected', 'No URL — go to Settings'); showToast('Script URL not configured', 'error'); return; }
+  setStatus('pending', 'Loading...');
+  try {
+    const [devJson, statJson, tasksJson] = await Promise.all([
+      jsonpRequest(scriptUrl, { action: 'readalldevices' }),
+      jsonpRequest(scriptUrl, { action: 'readallstatuses' }),
+      jsonpRequest(scriptUrl, { action: 'readtasks' })
+    ]);
+    if (devJson.success) allDevices = devJson.data || [];
+    if (statJson.success) allStatuses = statJson.data || {};
+    if (tasksJson.success) allTaskConfig = tasksJson.data || [];
+    setStatus('connected', 'Connected');
+    buildDynamicColumns();
+    applyFilters();
+    showToast('Report loaded: ' + allDevices.length + ' units', 'success');
+  } catch(err) {
+    setStatus('disconnected', 'Connection failed');
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// --- Build Dynamic Columns ---
+function buildDynamicColumns() {
+  dynamicTaskColumns = allTaskConfig.filter(t => t['Active'] === 'Yes').map(t => ({
+    taskId: t['Task ID'],
+    label: t['Label'] || t['Task ID']
+  }));
+  renderTableHeader();
+}
+
+function renderTableHeader() {
+  const thead = document.getElementById('tableHead');
+  let html = '<tr>';
+  html += '<th class="col-imei">IMEI</th>';
+  html += '<th>OEM</th><th>SKU</th><th>Model</th><th>Order Type</th><th>DISPO IN</th><th>Status</th><th>QC Result</th>';
+  dynamicTaskColumns.forEach(col => {
+    html += '<th>' + escapeHtml(col.label) + '</th>';
+  });
+  html += '</tr>';
+  thead.innerHTML = html;
+}
+
+// --- Filtering ---
+function applyFilters() {
+  const orderType = document.getElementById('filterOrderType').value;
+  const status = document.getElementById('filterStatus').value;
+  const imeiSearch = document.getElementById('filterIMEI').value.trim().toLowerCase();
+
+  filteredData = allDevices.filter(dev => {
+    if (orderType && dev['Order Type'] !== orderType) return false;
+    const unitStatus = getUnitStatus(dev['IMEI'], dev['Order Type']);
+    if (status && unitStatus !== status) return false;
+    if (imeiSearch && !(dev['IMEI'] || '').toLowerCase().includes(imeiSearch)) return false;
+    return true;
+  });
+
+  document.getElementById('recordCount').textContent = 'Showing ' + filteredData.length + ' of ' + allDevices.length + ' units';
+  renderTableBody();
+}
+
+// --- Render Table Body ---
+function renderTableBody() {
+  const tbody = document.getElementById('tableBody');
+  if (filteredData.length === 0) {
+    const colCount = 8 + dynamicTaskColumns.length;
+    tbody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align:center;padding:30px;color:#aaa;">No data to display</td></tr>';
+    return;
+  }
+
+  let html = '';
+  filteredData.forEach(dev => {
+    const imei = dev['IMEI'] || '';
+    const oem = dev['OEM'] || '';
+    const sku = dev['SKU'] || '';
+    const model = dev['MODEL'] || '';
+    const orderType = dev['Order Type'] || '';
+    const dispoIn = dev['DISPO IN'] || '';
+    const unitStatus = getUnitStatus(imei, orderType);
+    const statusClass = unitStatus.toLowerCase().replace(/\s+/g, '-');
+    const statuses = allStatuses[imei] || {};
+    const qcResult = statuses['QC_RESULT'] ? statuses['QC_RESULT'].result : '';
+
+    html += '<tr>';
+    html += '<td class="col-imei">' + escapeHtml(imei) + '</td>';
+    html += '<td>' + escapeHtml(oem) + '</td>';
+    html += '<td>' + escapeHtml(sku) + '</td>';
+    html += '<td>' + escapeHtml(model) + '</td>';
+    html += '<td>' + escapeHtml(orderType) + '</td>';
+    html += '<td>' + escapeHtml(dispoIn) + '</td>';
+    html += '<td><span class="status-badge ' + statusClass + '">' + unitStatus + '</span></td>';
+    html += '<td>' + formatResult(qcResult) + '</td>';
+
+    dynamicTaskColumns.forEach(col => {
+      const taskData = statuses[col.taskId];
+      const result = taskData ? taskData.result : '';
+      html += '<td>' + formatResult(result) + '</td>';
+    });
+
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function formatResult(result) {
+  if (!result) return '<span class="result-empty">—</span>';
+  const upper = result.toUpperCase();
+  if (upper === 'PASS' || upper === 'YES' || upper === 'CONFIRMED') {
+    return '<span class="result-pass">' + escapeHtml(result) + '</span>';
+  }
+  if (upper === 'FAIL' || upper === 'NO') {
+    return '<span class="result-fail">' + escapeHtml(result) + '</span>';
+  }
+  return '<span class="result-other">' + escapeHtml(result) + '</span>';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// --- Export CSV ---
+function exportCSV() {
+  if (filteredData.length === 0) { showToast('No data to export', 'error'); return; }
+
+  // Build headers
+  const headers = ['IMEI', 'OEM', 'SKU', 'MODEL', 'Order Type', 'DISPO IN', 'Status', 'QC Result'];
+  dynamicTaskColumns.forEach(col => headers.push(col.label));
+
+  // Build rows from filtered data
+  const rows = filteredData.map(dev => {
+    const imei = dev['IMEI'] || '';
+    const statuses = allStatuses[imei] || {};
+    const unitStatus = getUnitStatus(imei, dev['Order Type']);
+    const qcResult = statuses['QC_RESULT'] ? statuses['QC_RESULT'].result : '';
+
+    const row = [
+      imei,
+      dev['OEM'] || '',
+      dev['SKU'] || '',
+      dev['MODEL'] || '',
+      dev['Order Type'] || '',
+      dev['DISPO IN'] || '',
+      unitStatus,
+      qcResult
+    ];
+    dynamicTaskColumns.forEach(col => {
+      const taskData = statuses[col.taskId];
+      row.push(taskData ? taskData.result : '');
+    });
+    return row;
+  });
+
+  // Create CSV content
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
+    .join('\n');
+
+  // Create blob and download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'unit-summary-' + new Date().toISOString().slice(0,10) + '.csv';
+  link.click();
+}
+</script>

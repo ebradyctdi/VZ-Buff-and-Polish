@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VZ Buff &amp; Polish - Buff &amp; Polish</title>
+<title>VZ Buff &amp; Polish - Initial Functional Testing</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
@@ -117,12 +117,12 @@
       <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
       <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
       <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
-      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
+      <a href="initial-functional-test.html" class="active"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
       <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
-      <a href="buff-and-polish.html" class="active"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
       <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
     </div>
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
@@ -144,7 +144,7 @@
 <div class="main-wrap">
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <div class="header">
-    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Buff &amp; Polish</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Initial Functional Testing</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
     <div class="header-right">
       <span class="status-dot disconnected" id="statusDot"></span>
       <span class="status-label" id="statusLabel">Not connected</span>
@@ -174,7 +174,7 @@
 </html>
 <script>
 const URL_KEY = 'vzbnp_script_url';
-const PAGE_NAME = 'Buff & Polish';
+const PAGE_NAME = 'Initial Functional Testing';
 let scriptUrl = '';
 let currentDevice = null;
 let existingStatus = {};
@@ -306,6 +306,7 @@ function renderTests() {
     html += '<h3>' + test.label + '</h3>';
     html += '<div class="test-desc">' + test.param + '</div>';
 
+    // Show previous/current result
     if (submitted) {
       html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
       html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button></div>';
@@ -358,6 +359,7 @@ function renderTests() {
       html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
 
     } else {
+      // No previous result
       if (isText) {
         html += '<div class="text-input-row">';
         html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
@@ -393,6 +395,7 @@ function selectText(key, id) {
   const el = document.getElementById('input_' + id);
   if (el) {
     fieldSelections[key] = el.value;
+    // Enable/disable submit buttons without full re-render to keep cursor position
     const sec = document.getElementById('sec_' + id);
     if (sec) {
       const btns = sec.querySelectorAll('.btn-submit, .btn-submit-note');
@@ -416,6 +419,7 @@ async function submitTest(key, id) {
   if (!result || !result.trim()) return;
   result = result.trim();
 
+  // Validate percentage fields
   const test = TESTS.find(t => t.taskId === key);
   if (test && test.unit === '%') {
     const num = parseFloat(result);
@@ -454,6 +458,7 @@ async function submitTestWithNote(key, id) {
   const note = document.getElementById('noteText_' + id).value.trim();
   if (!note) { showToast('Enter a note or use Submit Result', 'error'); return; }
 
+  // Validate percentage fields
   const test = TESTS.find(t => t.taskId === key);
   if (test && test.unit === '%') {
     const num = parseFloat(result);

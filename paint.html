@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VZ Buff &amp; Polish - Buff &amp; Polish</title>
+<title>VZ Buff &amp; Polish - Paint</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
@@ -52,8 +52,6 @@
   .device-banner.show { display: block; }
   .device-banner .banner-imei { font-family: Consolas, monospace; font-weight: 700; font-size: 15px; color: #1a3a5c; }
   .device-banner .banner-info { font-size: 12px; color: #555; margin-top: 4px; }
-</style>
-<style>
   .test-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; display: none; }
   .test-section.show { display: block; }
   .test-section h3 { font-size: 14px; color: #1a3a5c; margin-bottom: 4px; }
@@ -62,15 +60,16 @@
   .test-section .previous-result.pass { background: #d4edda; color: #155724; }
   .test-section .previous-result.fail { background: #f8d7da; color: #721c24; }
   .test-section .previous-result.cleared { background: #e9ecef; color: #6c757d; }
-  .grade-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .grade-btn { padding: 10px 20px; border: 2px solid #ddd; border-radius: 8px; background: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-  .grade-btn:hover { border-color: #1a3a5c; background: #f0f4ff; }
-  .grade-btn.selected { border-color: #0d6efd; background: #e7f1ff; color: #0d6efd; transform: scale(1.05); }
-  .grade-btn.dimmed { opacity: 0.4; }
-  .text-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
-  .text-input-row input { flex: 1; max-width: 300px; padding: 10px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
-  .text-input-row input:focus { outline: none; border-color: #1a3a5c; }
-  .text-input-row .unit-label { font-size: 13px; color: #666; font-weight: 500; }
+</style>
+<style>
+  .option-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .option-btn { padding: 12px 28px; border: 2px solid #ddd; border-radius: 8px; background: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .option-btn:hover { border-color: #1a3a5c; background: #f0f4ff; }
+  .option-btn.selected { border-color: #0d6efd; background: #e7f1ff; color: #0d6efd; transform: scale(1.05); }
+  .option-btn.dimmed { opacity: 0.4; }
+  .option-btn.pass-btn.selected { border-color: #28a745; background: #d4edda; color: #155724; }
+  .option-btn.fail-btn.selected { border-color: #dc3545; background: #f8d7da; color: #721c24; }
+  .option-btn.na-btn.selected { border-color: #6c757d; background: #e9ecef; color: #495057; }
   .submit-row { display: flex; gap: 8px; align-items: center; }
   .submit-row .btn-submit { padding: 8px 16px; background: #0d6efd; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
   .submit-row .btn-submit:hover { background: #0b5ed7; }
@@ -82,8 +81,6 @@
   .note-area.show { display: block; }
   .note-area textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; resize: vertical; min-height: 50px; margin-bottom: 8px; }
   #toast { position: fixed; top: 80px; right: 30px; padding: 14px 24px; border-radius: 6px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 400; transform: translateX(120%); transition: transform 0.3s ease; }
-</style>
-<style>
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 300; }
     .sidebar.open { transform: translateX(0); }
@@ -96,8 +93,6 @@
     .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
     .scan-row { flex-direction: column; }
     .scan-row input, .scan-row button { width: 100%; }
-    .text-input-row { flex-direction: column; align-items: stretch; }
-    .text-input-row input { max-width: 100%; }
   }
   @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
 </style>
@@ -122,8 +117,8 @@
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
       <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
-      <a href="buff-and-polish.html" class="active"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
-      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html" class="active"><span class="icon">&#x1F3A8;</span> Paint</a>
     </div>
     <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
     <div class="nav-group">
@@ -144,7 +139,7 @@
 <div class="main-wrap">
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <div class="header">
-    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Buff &amp; Polish</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">☰</button><div><h1>Paint</h1><div class="header-sub">CTDI — VZ Buff &amp; Polish</div></div></div>
     <div class="header-right">
       <span class="status-dot disconnected" id="statusDot"></span>
       <span class="status-label" id="statusLabel">Not connected</span>
@@ -174,23 +169,16 @@
 </html>
 <script>
 const URL_KEY = 'vzbnp_script_url';
-const PAGE_NAME = 'Buff & Polish';
+const PAGE_NAME = 'Paint';
 let scriptUrl = '';
 let currentDevice = null;
 let existingStatus = {};
 let fieldSelections = {};
 let fieldResults = {};
 let _jsonpCounter = 0;
-
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
-
 let TESTS = []; // Loaded dynamically from Task Configuration
 
-function getVisibleTests() {
-  if (!currentDevice) return [];
-  const orderType = currentDevice['Order Type'] || '';
-  return TESTS.filter(t => orderType === 'CLNR' ? t.clnr : t.cpo);
-}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
 
 function jsonpRequest(url, params) {
   return new Promise((resolve, reject) => {
@@ -211,8 +199,13 @@ function setStatus(state, label) {
   document.getElementById('statusDot').className = 'status-dot ' + state;
   document.getElementById('statusLabel').textContent = label;
 }
-
 function isValidIMEI(val) { return /^\d{15}$/.test(val); }
+
+function getVisibleTests() {
+  if (!currentDevice) return [];
+  const orderType = currentDevice['Order Type'] || '';
+  return TESTS.filter(t => orderType === 'CLNR' ? t.clnr : t.cpo);
+}
 
 async function doLookup() {
   const imei = document.getElementById('imeiInput').value.trim();
@@ -282,7 +275,6 @@ function showDeviceBanner() {
   document.getElementById('bannerInfo').textContent = currentDevice['MODEL'] + ' — ' + currentDevice['OEM'] + ' — ' + currentDevice['Order Type'];
   document.getElementById('deviceBanner').classList.add('show');
 }
-
 function hideAll() {
   document.getElementById('deviceBanner').classList.remove('show');
   document.getElementById('testFields').innerHTML = '';
@@ -300,9 +292,8 @@ function renderTests() {
     const hasExisting = existing && existing.result !== 'CLEARED';
     const selected = fieldSelections[key] || '';
     const id = key.replace(/[^a-zA-Z0-9]/g, '_');
-    const isText = test.type === 'text';
 
-    html += '<div class="test-section show" id="sec_' + id + '">';
+    html += '<div class="test-section show">';
     html += '<h3>' + test.label + '</h3>';
     html += '<div class="test-desc">' + test.param + '</div>';
 
@@ -310,73 +301,14 @@ function renderTests() {
       html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
       html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button></div>';
     } else if (hasExisting) {
-      const cls = (existing.result === 'FAIL' || existing.result === 'NO') ? 'fail' : 'pass';
+      const cls = existing.result === 'FAIL' ? 'fail' : existing.result === 'PASS' ? 'pass' : 'cleared';
       html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
-
-      if (isText) {
-        html += '<div class="text-input-row">';
-        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
-        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
-        html += '</div>';
-      } else {
-        html += '<div class="grade-options">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div>';
-      }
-
-      html += '<div class="submit-row">';
-      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
-      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
-      html += '<button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button>';
-      html += '</div>';
-      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-
+      html += buildOptionsHtml(test.options, key, selected);
     } else if (existing && existing.result === 'CLEARED') {
       html += '<div class="previous-result cleared">⟳ Cleared — needs re-test (' + existing.timestamp + ' by ' + existing.user + ')</div>';
-
-      if (isText) {
-        html += '<div class="text-input-row">';
-        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
-        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
-        html += '</div>';
-      } else {
-        html += '<div class="grade-options">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div>';
-      }
-
-      html += '<div class="submit-row">';
-      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
-      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
-      html += '</div>';
-      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
-
+      html += buildOptionsHtml(test.options, key, selected);
     } else {
-      if (isText) {
-        html += '<div class="text-input-row">';
-        html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
-        if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
-        html += '</div>';
-      } else {
-        html += '<div class="grade-options">';
-        test.options.forEach(g => {
-          const selCls = selected === g ? ' selected' : (selected && selected !== g ? ' dimmed' : '');
-          html += '<button class="grade-btn' + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + g + '\')">' + g + '</button>';
-        });
-        html += '</div>';
-      }
-
-      html += '<div class="submit-row">';
-      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
-      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
-      html += '</div>';
-      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+      html += buildOptionsHtml(test.options, key, selected);
     }
     html += '</div>';
   });
@@ -384,132 +316,92 @@ function renderTests() {
   container.innerHTML = html;
 }
 
+function buildOptionsHtml(options, key, selected) {
+  const id = key.replace(/[^a-zA-Z0-9]/g, '_');
+  let html = '<div class="option-buttons">';
+  options.forEach(opt => {
+    const btnCls = opt === 'PASS' ? 'pass-btn' : opt === 'FAIL' ? 'fail-btn' : 'na-btn';
+    const selCls = selected === opt ? ' selected' : (selected && selected !== opt ? ' dimmed' : '');
+    html += '<button class="option-btn ' + btnCls + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + opt + '\')">' + opt + '</button>';
+  });
+  html += '</div>';
+  html += '<div class="submit-row">';
+  html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+  html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+  const existing = existingStatus[key];
+  if (existing && existing.result !== 'CLEARED') {
+    html += '<button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button>';
+  }
+  html += '</div>';
+  html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+  return html;
+}
+
 function selectGrade(key, grade) {
   fieldSelections[key] = grade;
   renderTests();
 }
 
-function selectText(key, id) {
-  const el = document.getElementById('input_' + id);
-  if (el) {
-    fieldSelections[key] = el.value;
-    const sec = document.getElementById('sec_' + id);
-    if (sec) {
-      const btns = sec.querySelectorAll('.btn-submit, .btn-submit-note');
-      btns.forEach(b => { b.disabled = !el.value.trim(); });
-    }
-  }
-}
+function showNote(id) { document.getElementById('note_' + id).classList.add('show'); document.getElementById('noteText_' + id).focus(); }
+function hideNote(id) { document.getElementById('note_' + id).classList.remove('show'); }
 
-function showNote(id) {
-  document.getElementById('note_' + id).classList.add('show');
-  document.getElementById('noteText_' + id).focus();
-}
-function hideNote(id) {
-  document.getElementById('note_' + id).classList.remove('show');
-}
-
-async function submitTest(key, id) {
+async function submitTest(key) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  let result = fieldSelections[key];
-  if (!result || !result.trim()) return;
-  result = result.trim();
-
-  const test = TESTS.find(t => t.taskId === key);
-  if (test && test.unit === '%') {
-    const num = parseFloat(result);
-    if (isNaN(num) || num < 0 || num > 100) {
-      showToast('Enter a valid percentage (0-100)', 'error');
-      return;
-    }
-    result = num + '%';
-  }
+  const result = fieldSelections[key];
+  if (!result) return;
 
   fieldResults[key] = result;
   renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
-      action: 'logtest',
-      imei: currentDevice['IMEI'],
-      page: PAGE_NAME,
-      taskid: key,
-      result: result,
-      user: operator,
-      note: ''
+      action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
+      taskid: key, result: result, user: operator, note: ''
     });
     showToast('Result submitted: ' + result, 'success');
-  } catch(err) {
-    showToast('Error: ' + err.message, 'error');
-  }
+  } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 
 async function submitTestWithNote(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  let result = fieldSelections[key];
-  if (!result || !result.trim()) return;
-  result = result.trim();
+  const result = fieldSelections[key];
+  if (!result) return;
   const note = document.getElementById('noteText_' + id).value.trim();
   if (!note) { showToast('Enter a note or use Submit Result', 'error'); return; }
-
-  const test = TESTS.find(t => t.taskId === key);
-  if (test && test.unit === '%') {
-    const num = parseFloat(result);
-    if (isNaN(num) || num < 0 || num > 100) {
-      showToast('Enter a valid percentage (0-100)', 'error');
-      return;
-    }
-    result = num + '%';
-  }
 
   fieldResults[key] = result;
   renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
-      action: 'logtest',
-      imei: currentDevice['IMEI'],
-      page: PAGE_NAME,
-      taskid: key,
-      result: result,
-      user: operator,
-      note: note
+      action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
+      taskid: key, result: result, user: operator, note: note
     });
     showToast('Result submitted: ' + result, 'success');
-  } catch(err) {
-    showToast('Error: ' + err.message, 'error');
-  }
+  } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 
 async function clearTest(key) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
 
-  delete fieldResults[key];
-  delete fieldSelections[key];
+  fieldResults[key] = '';
+  fieldSelections[key] = '';
   delete existingStatus[key];
   renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
-      action: 'logtest',
-      imei: currentDevice['IMEI'],
-      page: PAGE_NAME,
-      taskid: key,
-      result: 'CLEARED',
-      user: operator,
-      note: ''
+      action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
+      taskid: key, result: 'CLEARED', user: operator, note: ''
     });
     const test = TESTS.find(t => t.taskId === key);
     showToast((test ? test.label : key) + ' cleared', 'warning');
-  } catch(err) {
-    showToast('Error: ' + err.message, 'error');
-  }
+  } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 
-// Enter key triggers lookup
 document.getElementById('imeiInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); doLookup(); }
 });

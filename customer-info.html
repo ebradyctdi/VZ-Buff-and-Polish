@@ -101,22 +101,38 @@
 <nav class="sidebar">
   <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
   <div class="sidebar-nav">
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Reporting</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
     <div class="nav-group">
-      <a href="overview.html"><span class="icon">📋</span> Overview</a>
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
     <div class="nav-group">
-      <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
-      <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
-      <a href="customer-info.html" class="active"><span class="icon">👤</span> Customer Information</a>
-      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
-      <a href="buff-and-polish.html"><span class="icon">✨</span> Buff &amp; Polish</a>
-      <a href="repair.html"><span class="icon">🔧</span> Repair</a>
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html" class="active"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
-      <a href="settings.html"><span class="icon">⚙️</span> Settings</a>
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
     </div>
   </div>
 </nav>
@@ -154,15 +170,15 @@
 <script>
 const URL_KEY = 'vzbnp_script_url';
 const PAGE_NAME = 'Customer Information';
-const TEST_PARAM = 'CI CLEAR STATUS  (Pass / Fail)';
 let scriptUrl = '';
 let currentDevice = null;
 let existingStatus = {};
-let selectedResult = '';
-let submitted = '';
+let fieldSelections = {};
+let fieldResults = {};
 let _jsonpCounter = 0;
+let TESTS = []; // Loaded dynamically from Task Configuration
 
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
 
 function jsonpRequest(url, params) {
   return new Promise((resolve, reject) => {
@@ -185,6 +201,12 @@ function setStatus(state, label) {
 }
 function isValidIMEI(val) { return /^\d{15}$/.test(val); }
 
+function getVisibleTests() {
+  if (!currentDevice) return [];
+  const orderType = currentDevice['Order Type'] || '';
+  return TESTS.filter(t => orderType === 'CLNR' ? t.clnr : t.cpo);
+}
+
 async function doLookup() {
   const imei = document.getElementById('imeiInput').value.trim();
   if (!imei) { showToast('Scan or type an IMEI', 'error'); return; }
@@ -196,17 +218,45 @@ async function doLookup() {
   setStatus('pending', 'Looking up...');
 
   try {
-    const [deviceJson, statusJson] = await Promise.all([
+    const [deviceJson, statusJson, tasksJson] = await Promise.all([
       jsonpRequest(scriptUrl, { action: 'lookupdevice', imei: imei }),
-      jsonpRequest(scriptUrl, { action: 'getstatus', imei: imei })
+      jsonpRequest(scriptUrl, { action: 'getstatus', imei: imei }),
+      jsonpRequest(scriptUrl, { action: 'readpagetasks', page: PAGE_NAME })
     ]);
+    if (tasksJson.success) {
+      TESTS = (tasksJson.data || []).map(t => {
+        const resultType = t['Result Type'] || '';
+        const options = t['Options'] ? t['Options'].split(',').map(o => o.trim()) : [];
+        let type = 'buttons';
+        let opts = [];
+        if (resultType === 'PASS/FAIL') { opts = ['PASS', 'FAIL']; }
+        else if (resultType === 'PASS/FAIL/NA') { opts = ['PASS', 'FAIL', 'N/A']; }
+        else if (resultType === 'YES/NO') { opts = ['YES', 'NO']; }
+        else if (resultType === 'YES/NO/NA') { opts = ['YES', 'NO', 'N/A']; }
+    else if (resultType === 'YES/NO/NOT REQUIRED') { opts = ['YES', 'NO', 'NOT REQUIRED']; }
+        else if (resultType === 'DROPDOWN') { opts = options; }
+        else if (resultType === 'FREE TEXT') { type = 'text'; }
+        else if (resultType === 'PERCENTAGE') { type = 'text'; }
+        return {
+          taskId: t['Task ID'],
+          param: t['Task Name'] || t['Task ID'],
+          label: t['Label'] || t['Task Name'] || t['Task ID'],
+          options: opts,
+          type: type,
+          unit: resultType === 'PERCENTAGE' ? '%' : '',
+          placeholder: type === 'text' ? (resultType === 'PERCENTAGE' ? '0-100' : 'Enter value...') : '',
+          cpo: t['CPO'] === 'Yes',
+          clnr: t['CLNR'] === 'Yes'
+        };
+      });
+    }
     if (deviceJson.success) {
       currentDevice = deviceJson.data;
       existingStatus = (statusJson.success && statusJson.data) ? statusJson.data : {};
-      selectedResult = '';
-      submitted = '';
+      fieldSelections = {};
+      fieldResults = {};
       showDeviceBanner();
-      renderTest();
+      renderTests();
       setStatus('connected', 'Connected');
     } else {
       showToast(deviceJson.error || 'Device not found', 'error');
@@ -230,112 +280,174 @@ function hideAll() {
   document.getElementById('testFields').innerHTML = '';
 }
 
-function renderTest() {
+function renderTests() {
+  const tests = getVisibleTests();
   const container = document.getElementById('testFields');
-  const existing = existingStatus[TEST_PARAM] || null;
-  const hasExisting = existing && existing.result !== 'CLEARED';
-  const options = ['PASS', 'FAIL', 'N/A'];
+  let html = '';
 
-  let html = '<div class="test-section show">';
-  html += '<h3>CI Clear Status</h3>';
-  html += '<div class="test-desc">Is the customer information cleared? Select Pass, Fail, or N/A.</div>';
+  tests.forEach(test => {
+    const key = test.taskId;
+    const submitted = fieldResults[key] || '';
+    const existing = existingStatus[key] || null;
+    const hasExisting = existing && existing.result !== 'CLEARED';
+    const selected = fieldSelections[key] || '';
+    const id = key.replace(/[^a-zA-Z0-9]/g, '_');
+    const isText = test.type === 'text';
 
-  if (submitted) {
-    html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
-    html += '<div class="submit-row"><button class="btn-clear" onclick="clearResult()">Clear</button></div>';
-  } else if (hasExisting) {
-    const cls = existing.result === 'FAIL' ? 'fail' : existing.result === 'PASS' ? 'pass' : 'cleared';
-    html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
-    html += buildOptionsHtml(options);
-  } else if (existing && existing.result === 'CLEARED') {
-    html += '<div class="previous-result cleared">⟳ Cleared — needs re-test (' + existing.timestamp + ' by ' + existing.user + ')</div>';
-    html += buildOptionsHtml(options);
-  } else {
-    html += buildOptionsHtml(options);
-  }
-  html += '</div>';
+    html += '<div class="test-section show" id="sec_' + id + '">';
+    html += '<h3>' + test.label + '</h3>';
+    html += '<div class="test-desc">' + test.param + '</div>';
+
+    if (submitted) {
+      html += '<div class="previous-result pass">✓ Submitted: ' + submitted + ' — just now</div>';
+      html += '<div class="submit-row"><button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button></div>';
+    } else if (hasExisting) {
+      const cls = (existing.result === 'FAIL' || existing.result === 'NO') ? 'fail' : existing.result === 'PASS' ? 'pass' : 'cleared';
+      html += '<div class="previous-result ' + cls + '">Previous: ' + existing.result + ' — ' + existing.timestamp + ' by ' + existing.user + (existing.note ? ' | Note: ' + existing.note : '') + '</div>';
+      html += buildTestInput(test, key, id, selected, isText);
+      html += '<div class="submit-row">';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '<button class="btn-clear" onclick="clearTest(\'' + key.replace(/'/g,"\\'") + '\')">Clear</button>';
+      html += '</div>';
+      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    } else if (existing && existing.result === 'CLEARED') {
+      html += '<div class="previous-result cleared">⟳ Cleared — needs re-test (' + existing.timestamp + ' by ' + existing.user + ')</div>';
+      html += buildTestInput(test, key, id, selected, isText);
+      html += '<div class="submit-row">';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '</div>';
+      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    } else {
+      html += buildTestInput(test, key, id, selected, isText);
+      html += '<div class="submit-row">';
+      html += '<button class="btn-submit" onclick="submitTest(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNote(\'' + id + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '</div>';
+      html += '<div class="note-area" id="note_' + id + '"><textarea id="noteText_' + id + '" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitTestWithNote(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">Submit</button> <button onclick="hideNote(\'' + id + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
+    }
+    html += '</div>';
+  });
+
   container.innerHTML = html;
 }
 
-function buildOptionsHtml(options) {
-  let html = '<div class="option-buttons">';
-  options.forEach(opt => {
-    const btnCls = opt === 'PASS' ? 'pass-btn' : opt === 'FAIL' ? 'fail-btn' : 'na-btn';
-    const selCls = selectedResult === opt ? ' selected' : (selectedResult && selectedResult !== opt ? ' dimmed' : '');
-    html += '<button class="option-btn ' + btnCls + selCls + '" onclick="selectOption(\'' + opt + '\')">' + opt + '</button>';
-  });
-  html += '</div>';
-  html += '<div class="submit-row">';
-  html += '<button class="btn-submit" onclick="submitResult()" ' + (!selectedResult ? 'disabled' : '') + '>Submit Result</button>';
-  html += '<button class="btn-submit-note" onclick="showNote()" ' + (!selectedResult ? 'disabled' : '') + '>Submit with Note</button>';
-  const existing = existingStatus[TEST_PARAM];
-  if (existing && existing.result !== 'CLEARED') {
-    html += '<button class="btn-clear" onclick="clearResult()">Clear</button>';
+function buildTestInput(test, key, id, selected, isText) {
+  let html = '';
+  if (isText) {
+    html += '<div class="text-input-row">';
+    html += '<input type="text" id="input_' + id + '" placeholder="' + (test.placeholder || '') + '" value="' + (selected || '').replace(/"/g,'&quot;') + '" oninput="selectText(\'' + key.replace(/'/g,"\\'") + '\',\'' + id + '\')">';
+    if (test.unit) html += '<span class="unit-label">' + test.unit + '</span>';
+    html += '</div>';
+  } else {
+    html += '<div class="option-buttons">';
+    test.options.forEach(opt => {
+      const btnCls = opt === 'PASS' ? 'pass-btn' : opt === 'FAIL' ? 'fail-btn' : 'na-btn';
+      const selCls = selected === opt ? ' selected' : (selected && selected !== opt ? ' dimmed' : '');
+      html += '<button class="option-btn ' + btnCls + selCls + '" onclick="selectGrade(\'' + key.replace(/'/g,"\\'") + '\',\'' + opt + '\')">' + opt + '</button>';
+    });
+    html += '</div>';
   }
-  html += '</div>';
-  html += '<div class="note-area" id="noteArea"><textarea id="noteText" placeholder="Enter note..."></textarea><button class="btn-submit" onclick="submitResultWithNote()">Submit</button> <button onclick="hideNote()" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button></div>';
   return html;
 }
 
-function selectOption(opt) {
-  selectedResult = opt;
-  renderTest();
+function selectGrade(key, grade) {
+  fieldSelections[key] = grade;
+  renderTests();
 }
 
-function showNote() { document.getElementById('noteArea').classList.add('show'); document.getElementById('noteText').focus(); }
-function hideNote() { document.getElementById('noteArea').classList.remove('show'); }
+function selectText(key, id) {
+  const el = document.getElementById('input_' + id);
+  if (el) {
+    fieldSelections[key] = el.value;
+    const sec = document.getElementById('sec_' + id);
+    if (sec) {
+      const btns = sec.querySelectorAll('.btn-submit, .btn-submit-note');
+      btns.forEach(b => { b.disabled = !el.value.trim(); });
+    }
+  }
+}
 
-async function submitResult() {
+function showNote(id) { document.getElementById('note_' + id).classList.add('show'); document.getElementById('noteText_' + id).focus(); }
+function hideNote(id) { document.getElementById('note_' + id).classList.remove('show'); }
+
+async function submitTest(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  if (!selectedResult) return;
+  let result = fieldSelections[key];
+  if (!result || !result.trim()) return;
+  result = result.trim();
 
-  submitted = selectedResult;
-  renderTest();
+  const test = TESTS.find(t => t.taskId === key);
+  if (test && test.unit === '%') {
+    const num = parseFloat(result);
+    if (isNaN(num) || num < 0 || num > 100) {
+      showToast('Enter a valid percentage (0-100)', 'error');
+      return;
+    }
+    result = num + '%';
+  }
+
+  fieldResults[key] = result;
+  renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
       action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
-      parameter: TEST_PARAM, result: selectedResult, user: operator, note: ''
+      taskid: key, result: result, user: operator, note: ''
     });
-    showToast('CI Status submitted: ' + selectedResult, 'success');
+    showToast('Result submitted: ' + result, 'success');
   } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 
-async function submitResultWithNote() {
+async function submitTestWithNote(key, id) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
-  if (!selectedResult) return;
-  const note = document.getElementById('noteText').value.trim();
+  let result = fieldSelections[key];
+  if (!result || !result.trim()) return;
+  result = result.trim();
+  const note = document.getElementById('noteText_' + id).value.trim();
   if (!note) { showToast('Enter a note or use Submit Result', 'error'); return; }
 
-  submitted = selectedResult;
-  renderTest();
+  const test = TESTS.find(t => t.taskId === key);
+  if (test && test.unit === '%') {
+    const num = parseFloat(result);
+    if (isNaN(num) || num < 0 || num > 100) {
+      showToast('Enter a valid percentage (0-100)', 'error');
+      return;
+    }
+    result = num + '%';
+  }
+
+  fieldResults[key] = result;
+  renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
       action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
-      parameter: TEST_PARAM, result: selectedResult, user: operator, note: note
+      taskid: key, result: result, user: operator, note: note
     });
-    showToast('CI Status submitted: ' + selectedResult, 'success');
+    showToast('Result submitted: ' + result, 'success');
   } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 
-async function clearResult() {
+async function clearTest(key) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
 
-  submitted = '';
-  selectedResult = '';
-  delete existingStatus[TEST_PARAM];
-  renderTest();
+  delete fieldResults[key];
+  delete fieldSelections[key];
+  delete existingStatus[key];
+  renderTests();
 
   try {
     await jsonpRequest(scriptUrl, {
       action: 'logtest', imei: currentDevice['IMEI'], page: PAGE_NAME,
-      parameter: TEST_PARAM, result: 'CLEARED', user: operator, note: ''
+      taskid: key, result: 'CLEARED', user: operator, note: ''
     });
-    showToast('CI Status cleared', 'warning');
+    const test = TESTS.find(t => t.taskId === key);
+    showToast((test ? test.label : key) + ' cleared', 'warning');
   } catch(err) { showToast('Error: ' + err.message, 'error'); }
 }
 

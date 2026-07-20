@@ -123,22 +123,38 @@
 <nav class="sidebar">
   <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
   <div class="sidebar-nav">
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Reporting</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
     <div class="nav-group">
-      <a href="overview.html"><span class="icon">📋</span> Overview</a>
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
     <div class="nav-group">
-      <a href="unit-validation.html" class="active"><span class="icon">✅</span> Unit Validation</a>
-      <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
-      <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
-      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
-      <a href="buff-and-polish.html"><span class="icon">✨</span> Buff &amp; Polish</a>
-      <a href="repair.html"><span class="icon">🔧</span> Repair</a>
+      <a href="unit-validation.html" class="active"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
-      <a href="settings.html"><span class="icon">⚙️</span> Settings</a>
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
     </div>
   </div>
 </nav>
@@ -189,9 +205,15 @@ let existingStatus = {}; // { paramName: { result, timestamp, user } }
 let _jsonpCounter = 0;
 let sessionPass = 0, sessionFail = 0;
 
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
 
-const VALIDATION_PARAMS = ['IMEI', 'OEM', 'SKU', 'MODEL', 'DISPO IN'];
+const VALIDATION_PARAMS = [
+  { param: 'IMEI', taskId: '1' },
+  { param: 'OEM', taskId: '2' },
+  { param: 'SKU', taskId: '3' },
+  { param: 'MODEL', taskId: '4' },
+  { param: 'DISPO IN', taskId: '5' }
+];
 
 // JSONP
 function jsonpRequest(url, params) {
@@ -254,11 +276,13 @@ async function doLookup() {
 function renderValidationFields() {
   const container = document.getElementById('validationFields');
   let html = '';
-  VALIDATION_PARAMS.forEach(param => {
+  VALIDATION_PARAMS.forEach(item => {
+    const param = item.param;
+    const tid = item.taskId;
     const value = currentDevice[param] || '—';
-    const status = fieldResults[param] || '';
-    const existing = existingStatus[param] || null;
-    const selected = fieldSelections[param] || '';
+    const status = fieldResults[tid] || '';
+    const existing = existingStatus[tid] || null;
+    const selected = fieldSelections[tid] || '';
     const hasExistingResult = existing && existing.result !== 'CLEARED';
     const confirmedCls = status === 'CONFIRMED' ? ' confirmed' : status === 'FAIL' ? ' failed' : hasExistingResult ? (existing.result === 'CONFIRMED' ? ' confirmed' : ' failed') : '';
     html += '<div class="validation-field' + confirmedCls + '" id="field_' + param.replace(/\s/g,'_') + '">';
@@ -278,45 +302,45 @@ function renderValidationFields() {
     html += '</div>';
     html += '<div class="field-actions">';
     if (status) {
-      html += '<button class="btn-clear" onclick="clearField(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button>';
+      html += '<button class="btn-clear" onclick="clearField(\'' + tid + '\')">Clear</button>';
     } else if (hasExistingResult) {
-      html += '<button class="btn-clear" onclick="clearField(\'' + param.replace(/'/g,"\\'") + '\')">Clear</button>';
+      html += '<button class="btn-clear" onclick="clearField(\'' + tid + '\')">Clear</button>';
     } else {
       const confirmSel = selected === 'CONFIRMED' ? ' selected' : '';
       const failSel = selected === 'FAIL' ? ' selected' : '';
       const confirmDim = selected === 'FAIL' ? ' dimmed' : '';
       const failDim = selected === 'CONFIRMED' ? ' dimmed' : '';
-      html += '<button class="btn-confirm' + confirmSel + confirmDim + '" onclick="selectField(\'' + param.replace(/'/g,"\\'") + '\', \'CONFIRMED\')">✓</button>';
-      html += '<button class="btn-fail-field' + failSel + failDim + '" onclick="selectField(\'' + param.replace(/'/g,"\\'") + '\', \'FAIL\')">✗</button>';
-      html += '<button class="btn-submit" onclick="logField(\'' + param.replace(/'/g,"\\'") + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
-      html += '<button class="btn-submit-note" onclick="showNoteInput(\'' + param.replace(/'/g,"\\'") + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
+      html += '<button class="btn-confirm' + confirmSel + confirmDim + '" onclick="selectField(\'' + tid + '\', \'CONFIRMED\')">✓</button>';
+      html += '<button class="btn-fail-field' + failSel + failDim + '" onclick="selectField(\'' + tid + '\', \'FAIL\')">✗</button>';
+      html += '<button class="btn-submit" onclick="logField(\'' + tid + '\')" ' + (!selected ? 'disabled' : '') + '>Submit Result</button>';
+      html += '<button class="btn-submit-note" onclick="showNoteInput(\'' + tid + '\')" ' + (!selected ? 'disabled' : '') + '>Submit with Note</button>';
     }
     html += '</div></div>';
     // Note input area (hidden by default, shown when "Submit with Note" is clicked)
-    html += '<div class="note-input-area" id="noteArea_' + param.replace(/\s/g,'_') + '" style="display:none;margin-top:-4px;margin-bottom:12px;padding:12px 18px;background:#f0f4ff;border-radius:0 0 8px 8px;border:1px solid #d0d8e8;border-top:none;">';
-    html += '<textarea id="noteText_' + param.replace(/\s/g,'_') + '" placeholder="Enter note..." style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;resize:vertical;min-height:50px;margin-bottom:8px;"></textarea>';
-    html += '<button class="btn-submit" onclick="logFieldWithNote(\'' + param.replace(/'/g,"\\'") + '\')" style="padding:8px 16px;background:#0d6efd;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Submit</button>';
-    html += ' <button onclick="hideNoteInput(\'' + param.replace(/'/g,"\\'") + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button>';
+    html += '<div class="note-input-area" id="noteArea_' + tid + '" style="display:none;margin-top:-4px;margin-bottom:12px;padding:12px 18px;background:#f0f4ff;border-radius:0 0 8px 8px;border:1px solid #d0d8e8;border-top:none;">';
+    html += '<textarea id="noteText_' + tid + '" placeholder="Enter note..." style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;resize:vertical;min-height:50px;margin-bottom:8px;"></textarea>';
+    html += '<button class="btn-submit" onclick="logFieldWithNote(\'' + tid + '\')" style="padding:8px 16px;background:#0d6efd;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Submit</button>';
+    html += ' <button onclick="hideNoteInput(\'' + tid + '\')" style="padding:8px 16px;background:#e9ecef;color:#333;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Cancel</button>';
     html += '</div>';
   });
   container.innerHTML = html;
 }
 
-function selectField(param, result) {
-  fieldSelections[param] = result;
+function selectField(tid, result) {
+  fieldSelections[tid] = result;
   renderValidationFields();
 }
 
-async function logField(param) {
+async function logField(tid) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
   if (!currentDevice) return;
 
-  const result = fieldSelections[param];
+  const result = fieldSelections[tid];
   if (!result) return;
 
   // Mark as submitted in UI
-  fieldResults[param] = result;
+  fieldResults[tid] = result;
   renderValidationFields();
 
   // Send to backend
@@ -325,44 +349,41 @@ async function logField(param) {
       action: 'logtest',
       imei: currentDevice['IMEI'],
       page: PAGE_NAME,
-      parameter: param,
+      taskid: tid,
       result: result,
       user: operator,
       note: ''
     });
   } catch(err) {
-    showToast('Error saving ' + param + ': ' + err.message, 'error');
+    showToast('Error saving: ' + err.message, 'error');
   }
 
   checkAllDone();
 }
 
-function showNoteInput(param) {
-  const id = param.replace(/\s/g,'_');
-  document.getElementById('noteArea_' + id).style.display = 'block';
-  document.getElementById('noteText_' + id).focus();
+function showNoteInput(tid) {
+  document.getElementById('noteArea_' + tid).style.display = 'block';
+  document.getElementById('noteText_' + tid).focus();
 }
 
-function hideNoteInput(param) {
-  const id = param.replace(/\s/g,'_');
-  document.getElementById('noteArea_' + id).style.display = 'none';
-  document.getElementById('noteText_' + id).value = '';
+function hideNoteInput(tid) {
+  document.getElementById('noteArea_' + tid).style.display = 'none';
+  document.getElementById('noteText_' + tid).value = '';
 }
 
-async function logFieldWithNote(param) {
+async function logFieldWithNote(tid) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
   if (!currentDevice) return;
 
-  const result = fieldSelections[param];
+  const result = fieldSelections[tid];
   if (!result) return;
 
-  const id = param.replace(/\s/g,'_');
-  const note = document.getElementById('noteText_' + id).value.trim();
+  const note = document.getElementById('noteText_' + tid).value.trim();
   if (!note) { showToast('Enter a note or use Submit Result instead', 'error'); return; }
 
   // Mark as submitted in UI
-  fieldResults[param] = result;
+  fieldResults[tid] = result;
   renderValidationFields();
 
   // Send to backend with note
@@ -371,20 +392,20 @@ async function logFieldWithNote(param) {
       action: 'logtest',
       imei: currentDevice['IMEI'],
       page: PAGE_NAME,
-      parameter: param,
+      taskid: tid,
       result: result,
       user: operator,
       note: note
     });
   } catch(err) {
-    showToast('Error saving ' + param + ': ' + err.message, 'error');
+    showToast('Error saving: ' + err.message, 'error');
   }
 
   checkAllDone();
 }
 
 function checkAllDone() {
-  const allDone = VALIDATION_PARAMS.every(p => fieldResults[p]);
+  const allDone = VALIDATION_PARAMS.every(item => fieldResults[item.taskId]);
   if (allDone) {
     const hasFail = Object.values(fieldResults).some(r => r === 'FAIL');
     showToast(hasFail ? 'Validation complete — has failures' : 'Validation complete — all confirmed', hasFail ? 'warning' : 'success');
@@ -400,15 +421,15 @@ function checkAllDone() {
   }
 }
 
-async function clearField(param) {
+async function clearField(tid) {
   const operator = document.getElementById('operatorName').value.trim();
   if (!operator) { showToast('Enter your name first', 'error'); return; }
   if (!currentDevice) return;
 
   // Remove from local state so buttons reappear
-  delete fieldResults[param];
-  delete fieldSelections[param];
-  delete existingStatus[param];
+  delete fieldResults[tid];
+  delete fieldSelections[tid];
+  delete existingStatus[tid];
   renderValidationFields();
 
   // Log a CLEARED transaction to the sheet
@@ -417,14 +438,14 @@ async function clearField(param) {
       action: 'logtest',
       imei: currentDevice['IMEI'],
       page: PAGE_NAME,
-      parameter: param,
+      taskid: tid,
       result: 'CLEARED',
       user: operator,
       note: ''
     });
-    showToast(param + ' cleared — ready to re-test', 'warning');
+    showToast('Cleared — ready to re-test', 'warning');
   } catch(err) {
-    showToast('Error clearing ' + param + ': ' + err.message, 'error');
+    showToast('Error clearing: ' + err.message, 'error');
   }
 }
 

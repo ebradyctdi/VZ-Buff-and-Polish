@@ -112,22 +112,38 @@
 <nav class="sidebar">
   <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
   <div class="sidebar-nav">
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Reporting</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
     <div class="nav-group">
-      <a href="overview.html" class="active"><span class="icon">📋</span> Overview</a>
+      <a href="overview.html" class="active"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
     <div class="nav-group">
-      <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
-      <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
-      <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
-      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
-      <a href="buff-and-polish.html"><span class="icon">✨</span> Buff &amp; Polish</a>
-      <a href="repair.html"><span class="icon">🔧</span> Repair</a>
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
-      <a href="settings.html"><span class="icon">⚙️</span> Settings</a>
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
     </div>
   </div>
 </nav>
@@ -141,7 +157,7 @@
     </div>
   </div>
   <div class="container">
-    <div class="kpi-row">
+    <div class="kpi-row" style="grid-template-columns: repeat(4, 1fr);">
       <div class="kpi" style="border-top:4px solid #1a3a5c;"><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-label">Total Units</div></div>
       <div class="kpi" style="border-top:4px solid #6c757d;"><div class="kpi-val" id="kpiNotStarted">—</div><div class="kpi-label">Not Started</div></div>
       <div class="kpi" style="border-top:4px solid #fd7e14;"><div class="kpi-val" id="kpiInProcess">—</div><div class="kpi-label">In Process</div></div>
@@ -214,77 +230,29 @@ let allDevices = [], allStatuses = {};
 let sortField = '', sortDir = 1; // 1 = asc, -1 = desc
 let _jsonpCounter = 0;
 
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
 
-// All test parameters by order type
-const ALL_PARAMS_CPO = [
-  'IMEI','OEM','SKU','MODEL','DISPO IN',
-  'Wholesale COSMETIC GRADE IN (Aligned to Verizon Wholesale Cosmetic Definitions)',
-  'D2C GRADE IN (Aligned to Verizon D2C Cosmetic Definitions)',
-  'Wholesale COSMETIC GRADE OUT (Aligned to Verizon Wholesale Cosmetic Definitions)',
-  'D2C COSMETIC GRADE OUT (Aligned to Verizon D2C Cosmetic Definitions)',
-  'CI CLEAR STATUS  (Pass / Fail)',
-  'Is Device Beyond Economical Repair (BER)? (Y/N)',
-  'Was Functional Light Repair Attempted (Y/N)',
-  'PRE-SERVICE FUNCTION TEST  (Pass/Fail)',
-  'POST-SERVICE FUNCTION TEST  (Pass / Fail)',
-  'BSOH IN BATTERY STATE OF HEALTH','BSOH OUT BATTERY STATE OF HEALTH','VENDOR NOTES',
-  'Was Unit Buff & Polished (Y/N)','1 SIDE B&P  (Indicate Y if Attempted)',
-  '2 SIDE B&P  (Indicate Y if Attempted)','B&P NOT ATTEMPTED','Reason for B&P No Attempt',
-  'If device failed Pre-Service Function Test, what parts failed?  Please list out all components which failed CPO Standards',
-  'Earpiece','Microphone','Face ID','Speaker','Rear Camera','Front Camera',
-  'Touch Screen','Ring Mute Switch','Light Sensor','Camera Flash','Device Vibrate',
-  'Battery','RF',
-  'Comments on RF  (e.g., Antenna, Proximity Sensor, etc.) Please provides notes on what "RF" part issues were encountered or if RF issues are beyond L2 and therefore not repaired',
-  'Other',
-  'Comments on Other  (e.g., charging port, etc.) Please provides notes on what "other" part repairs were performed (L2 Only)'
-];
+let allTaskConfig = []; // Loaded from Task Configuration sheet
 
-const CLNR_EXTRA = [
-  'PRE-SERVICE RF TEST (Pass / Fail)',
-  'PRE-SERVICE AIR LEAK (PRESSURE CHAMBER) TEST (Pass / Fail)',
-  'POST-SERVICE RF TEST (Pass / Fail)',
-  'POST-SERVICE AIR LEAK (PRESSURE CHAMBER) TEST (Pass / Fail)'
-];
-
-const ALL_PARAMS_CLNR = [
-  'IMEI','OEM','SKU','MODEL','DISPO IN',
-  'Wholesale COSMETIC GRADE IN (Aligned to Verizon Wholesale Cosmetic Definitions)',
-  'D2C GRADE IN (Aligned to Verizon D2C Cosmetic Definitions)',
-  'CI CLEAR STATUS  (Pass / Fail)',
-  'Is Device Beyond Economical Repair (BER)? (Y/N)',
-  'Was Functional Light Repair Attempted (Y/N)',
-  'PRE-SERVICE FUNCTION TEST  (Pass/Fail)',
-  'PRE-SERVICE RF TEST (Pass / Fail)',
-  'PRE-SERVICE AIR LEAK (PRESSURE CHAMBER) TEST (Pass / Fail)',
-  'POST-SERVICE FUNCTION TEST  (Pass / Fail)',
-  'POST-SERVICE RF TEST (Pass / Fail)',
-  'POST-SERVICE AIR LEAK (PRESSURE CHAMBER) TEST (Pass / Fail)',
-  'BSOH IN BATTERY STATE OF HEALTH','BSOH OUT BATTERY STATE OF HEALTH','VENDOR NOTES',
-  'Was Unit Buff & Polished (Y/N)','1 SIDE B&P  (Indicate Y if Attempted)',
-  '2 SIDE B&P  (Indicate Y if Attempted)','B&P NOT ATTEMPTED','Reason for B&P No Attempt',
-  'If device failed Pre-Service Function Test, what parts failed?  Please list out all components which failed CPO Standards',
-  'Earpiece','Microphone','Face ID','Speaker','Rear Camera','Front Camera',
-  'Touch Screen','Ring Mute Switch','Light Sensor','Camera Flash','Device Vibrate',
-  'Battery','RF',
-  'Comments on RF  (e.g., Antenna, Proximity Sensor, etc.) Please provides notes on what "RF" part issues were encountered or if RF issues are beyond L2 and therefore not repaired',
-  'Other',
-  'Comments on Other  (e.g., charging port, etc.) Please provides notes on what "other" part repairs were performed (L2 Only)'
-];
-
-function getRequiredParams(orderType) {
-  return orderType === 'CLNR' ? ALL_PARAMS_CLNR : ALL_PARAMS_CPO;
+function getRequiredTaskIds(orderType) {
+  return allTaskConfig
+    .filter(t => t['Active'] === 'Yes' && (orderType === 'CLNR' ? t['CLNR'] === 'Yes' : t['CPO'] === 'Yes'))
+    .map(t => t['Task ID']);
 }
 
 function getUnitStatus(imei, orderType) {
   const statuses = allStatuses[imei];
   if (!statuses) return 'Not Started';
-  const required = getRequiredParams(orderType);
-  // Count params that have a non-CLEARED result
-  const completed = required.filter(p => statuses[p] && statuses[p].result !== 'CLEARED').length;
-  if (completed === 0) return 'Not Started';
-  if (completed >= required.length) return 'Completed';
-  return 'In Process';
+
+  // Check QC result — any QC result (PASS or FAIL) means Completed
+  const qc = statuses['QC_RESULT'];
+  if (qc && qc.result && qc.result !== 'CLEARED') return 'Completed';
+
+  // Check if any task results exist (excluding QC)
+  const hasAnyResult = Object.keys(statuses).some(k => k !== 'QC_RESULT' && statuses[k].result && statuses[k].result !== 'CLEARED');
+  if (hasAnyResult) return 'In Process';
+
+  return 'Not Started';
 }
 
 function jsonpRequest(url, params) {
@@ -311,12 +279,14 @@ async function loadData() {
   if (!scriptUrl) { setStatus('disconnected', 'No URL — go to Settings'); return; }
   setStatus('pending', 'Loading...');
   try {
-    const [devJson, statJson] = await Promise.all([
+    const [devJson, statJson, tasksJson] = await Promise.all([
       jsonpRequest(scriptUrl, { action: 'readalldevices' }),
-      jsonpRequest(scriptUrl, { action: 'readallstatuses' })
+      jsonpRequest(scriptUrl, { action: 'readallstatuses' }),
+      jsonpRequest(scriptUrl, { action: 'readtasks' })
     ]);
     if (devJson.success) allDevices = devJson.data || [];
     if (statJson.success) allStatuses = statJson.data || {};
+    if (tasksJson.success) allTaskConfig = tasksJson.data || [];
     setStatus('connected', 'Connected');
     renderKPIs();
     populateFilters();
@@ -450,42 +420,56 @@ function fmtTimestamp(str) {
 function showDetail(imei, orderType) {
   const device = allDevices.find(d => d['IMEI'] === imei);
   const statuses = allStatuses[imei] || {};
-  const required = getRequiredParams(orderType);
 
   document.getElementById('modalTitle').textContent = imei;
   document.getElementById('modalSub').textContent = (device ? device['MODEL'] + ' — ' + device['OEM'] + ' — ' + orderType : orderType);
 
-  // Group params by page
-  const pages = {};
-  required.forEach(p => {
-    let page = 'Other';
-    if (['IMEI','OEM','SKU','MODEL','DISPO IN'].includes(p)) page = 'Device Validation';
-    else if (p.includes('COSMETIC') || p.includes('GRADE')) page = 'Cosmetic Grading';
-    else if (p.includes('CI CLEAR')) page = 'Customer Information';
-    else if (p.includes('BER') || p.includes('Repair Attempted') || p.includes('SERVICE') || p.includes('BSOH') || p.includes('VENDOR')) page = 'Functional Test';
-    else if (p.includes('B&P') || p.includes('Buff') || p.includes('Reason for')) page = 'Buff & Polish';
-    else page = 'Repair';
-    if (!pages[page]) pages[page] = [];
-    pages[page].push(p);
+  // Filter tasks by order type
+  const tasks = allTaskConfig.filter(t => {
+    if (t['Active'] !== 'Yes') return false;
+    if (orderType === 'CLNR') return t['CLNR'] === 'Yes';
+    return t['CPO'] === 'Yes';
   });
 
+  // Group tasks by Page
+  const pages = {};
+  tasks.forEach(t => {
+    const page = t['Page'] || 'Other';
+    if (!pages[page]) pages[page] = [];
+    pages[page].push(t);
+  });
+
+  // Sort within each group by Sort Order
+  Object.keys(pages).forEach(page => {
+    pages[page].sort((a, b) => (parseInt(a['Sort Order']) || 0) - (parseInt(b['Sort Order']) || 0));
+  });
+
+  // Define page display order
+  const pageOrder = ['Unit Validation', 'Initial Cosmetic Grading', 'Customer Information', 'Initial Functional Testing', 'Repair', 'Buff & Polish', 'Paint', 'Final Functional Testing', 'Final Cosmetic Grading', 'QC'];
+  const sortedPages = pageOrder.filter(p => pages[p]);
+  Object.keys(pages).forEach(p => { if (!sortedPages.includes(p)) sortedPages.push(p); });
+
   let html = '';
-  Object.entries(pages).forEach(([page, params]) => {
+  sortedPages.forEach(page => {
     html += '<div class="detail-section-header">' + page + '</div>';
-    html += '<table class="detail-table"><thead><tr><th>Parameter</th><th>Result</th><th>User</th><th>Timestamp</th><th>Note</th></tr></thead><tbody>';
-    params.forEach(p => {
-      const s = statuses[p];
+    html += '<table class="detail-table"><thead><tr><th>Task</th><th>Result</th><th>User</th><th>Timestamp</th><th>Note</th></tr></thead><tbody>';
+    pages[page].forEach(task => {
+      const taskId = task['Task ID'];
+      const label = task['Label'] || task['Task Name'] || taskId;
+      const s = statuses[taskId];
       let resultCls = 'result-none';
       let resultText = '—';
-      if (s) {
+      if (s && s.result && s.result !== 'CLEARED') {
         if (s.result === 'CONFIRMED' || s.result === 'PASS' || s.result === 'YES') resultCls = 'result-pass';
         else if (s.result === 'FAIL' || s.result === 'NO') resultCls = 'result-fail';
-        else if (s.result === 'CLEARED') resultCls = 'result-cleared';
         else resultCls = 'result-pass';
         resultText = s.result;
+      } else if (s && s.result === 'CLEARED') {
+        resultCls = 'result-cleared';
+        resultText = 'CLEARED';
       }
       html += '<tr>';
-      html += '<td style="max-width:250px;word-wrap:break-word;">' + p + '</td>';
+      html += '<td style="max-width:250px;word-wrap:break-word;">' + label + '</td>';
       html += '<td class="' + resultCls + '">' + resultText + '</td>';
       html += '<td>' + (s ? s.user : '—') + '</td>';
       html += '<td>' + (s ? fmtTimestamp(s.timestamp) : '—') + '</td>';

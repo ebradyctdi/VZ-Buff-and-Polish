@@ -55,22 +55,38 @@
 <nav class="sidebar">
   <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
   <div class="sidebar-nav">
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Reporting</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
     <div class="nav-group">
-      <a href="overview.html"><span class="icon">📋</span> Overview</a>
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ Unit Processing</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
     <div class="nav-group">
-      <a href="unit-validation.html"><span class="icon">✅</span> Unit Validation</a>
-      <a href="cosmetic-grading.html"><span class="icon">🔍</span> Cosmetic Grading</a>
-      <a href="customer-info.html"><span class="icon">👤</span> Customer Information</a>
-      <a href="functional-test.html"><span class="icon">🧪</span> Functional Test</a>
-      <a href="buff-and-polish.html"><span class="icon">✨</span> Buff &amp; Polish</a>
-      <a href="repair.html"><span class="icon">🔧</span> Repair</a>
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
     </div>
-    <div class="nav-section" onclick="toggleNavGroup(this)">▶ System</div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
     <div class="nav-group">
-      <a href="settings.html" class="active"><span class="icon">⚙️</span> Settings</a>
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html" class="active"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
     </div>
   </div>
 </nav>
@@ -87,6 +103,7 @@
       <input type="text" id="urlInput" placeholder="https://script.google.com/macros/s/.../exec">
       <button onclick="saveUrl()">Save URL</button>
       <div class="current-url" id="currentUrl"></div>
+      <div class="current-url" id="urlTimestamp" style="margin-top:4px;color:#28a745;"></div>
     </div>
 
     <div class="settings-card">
@@ -99,7 +116,18 @@
     <div class="settings-card">
       <h2>Google Sheet</h2>
       <p>The backend data lives in the Google Sheet below.</p>
-      <a href="https://docs.google.com/spreadsheets/d/1YndKgV3kVOEtW4RzBQGy8ANJ_VEEmhj7dB6kD88WwNo/edit" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#0d6efd;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;margin-top:4px;">📊 Open Google Sheet</a>
+      <a href="https://docs.google.com/spreadsheets/d/1O0bKKQso6n04aQ5qvtLHn7RiMKauBhcriAziKzrlGV0/edit" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#0d6efd;color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;margin-top:4px;">📊 Open Google Sheet</a>
+    </div>
+
+    <div class="settings-card">
+      <h2>Default Web App URL</h2>
+      <p>New to this PC? Copy or apply the URL below:</p>
+      <div style="margin-top:8px;font-size:11px;color:#555;font-weight:600;">Deployed: 07/20/2026</div>
+      <div style="margin-top:10px;padding:12px 14px;background:#f0f2f5;border:1px solid #ddd;border-radius:6px;font-family:Consolas,monospace;font-size:11px;word-break:break-all;user-select:all;" id="defaultUrlDisplay">https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec</div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button onclick="copyDefaultUrl()" style="padding:8px 16px;background:#6c757d;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">&#x1F4CB; Copy to Clipboard</button>
+        <button onclick="useDefaultUrl()" style="padding:8px 16px;background:#28a745;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">&#x2705; Use This URL</button>
+      </div>
     </div>
 
     <div class="settings-card">
@@ -126,17 +154,26 @@
 <script>
 const URL_KEY = 'vzbnp_script_url';
 let scriptUrl = '';
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbzD6Ru9BVYVmw2PifI9yGNYiEl1PBPEWH6OCOj2B_PdD-vWzPPOY7F4Yz6bZ4e9GY5u/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
 
 document.getElementById('urlInput').value = scriptUrl;
 document.getElementById('currentUrl').textContent = scriptUrl ? 'Current: ' + scriptUrl : 'No URL saved';
 
+// Show last saved timestamp
+const URL_TS_KEY = 'vzbnp_script_url_timestamp';
+let savedTs = '';
+try { savedTs = localStorage.getItem(URL_TS_KEY) || ''; } catch(e) {}
+document.getElementById('urlTimestamp').textContent = savedTs ? 'Last updated: ' + savedTs : '';
+
 function saveUrl() {
   const url = document.getElementById('urlInput').value.trim();
   if (!url) { showToast('Enter a URL', 'error'); return; }
-  try { localStorage.setItem(URL_KEY, url); } catch(e) {}
+  const now = new Date();
+  const ts = (now.getMonth()+1).toString().padStart(2,'0') + '/' + now.getDate().toString().padStart(2,'0') + '/' + now.getFullYear().toString().slice(2) + ' ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  try { localStorage.setItem(URL_KEY, url); localStorage.setItem(URL_TS_KEY, ts); } catch(e) {}
   scriptUrl = url;
   document.getElementById('currentUrl').textContent = 'Current: ' + url;
+  document.getElementById('urlTimestamp').textContent = 'Last updated: ' + ts;
   showToast('URL saved', 'success');
 }
 
@@ -145,6 +182,21 @@ function showToast(msg, type) {
   t.style.background = type==='success'?'#28a745':type==='error'?'#dc3545':'#fd7e14';
   t.style.transform = 'translateX(0)';
   setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 2500);
+}
+
+function copyDefaultUrl() {
+  const url = document.getElementById('defaultUrlDisplay').textContent;
+  navigator.clipboard.writeText(url).then(() => { showToast('URL copied to clipboard', 'success'); }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('URL copied to clipboard', 'success');
+  });
+}
+
+function useDefaultUrl() {
+  const url = document.getElementById('defaultUrlDisplay').textContent;
+  document.getElementById('urlInput').value = url;
+  saveUrl();
 }
 
 // JSONP for connection test
