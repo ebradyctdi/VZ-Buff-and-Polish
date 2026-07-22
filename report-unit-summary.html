@@ -186,7 +186,7 @@ let filteredData = [];
 let dynamicTaskColumns = [];
 let _jsonpCounter = 0;
 
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyWkDLEA_EGz3OhWNHWzllRfOnKqn8wuJQB2GSAeyvuG2vjJvBCuTaW-E7MTozqEidS/exec'; } catch(e) {}
 
 // --- Navigation ---
 function toggleNavGroup(el) {
@@ -298,6 +298,7 @@ function renderTableHeader() {
   html += '<th>OEM</th><th>SKU</th><th>Model</th><th>Order Type</th><th>DISPO IN</th><th>Status</th><th>QC Result</th>';
   dynamicTaskColumns.forEach(col => {
     html += '<th>' + escapeHtml(col.label) + '</th>';
+    html += '<th style="color:rgba(255,255,255,0.7);font-weight:400;">Note</th>';
   });
   html += '</tr>';
   thead.innerHTML = html;
@@ -325,7 +326,7 @@ function applyFilters() {
 function renderTableBody() {
   const tbody = document.getElementById('tableBody');
   if (filteredData.length === 0) {
-    const colCount = 8 + dynamicTaskColumns.length;
+    const colCount = 8 + (dynamicTaskColumns.length * 2);
     tbody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align:center;padding:30px;color:#aaa;">No data to display</td></tr>';
     return;
   }
@@ -356,7 +357,9 @@ function renderTableBody() {
     dynamicTaskColumns.forEach(col => {
       const taskData = statuses[col.taskId];
       const result = taskData ? taskData.result : '';
+      const note = taskData ? (taskData.note || '') : '';
       html += '<td>' + formatResult(result) + '</td>';
+      html += '<td style="font-size:11px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(note) + '">' + escapeHtml(note) + '</td>';
     });
 
     html += '</tr>';
@@ -387,7 +390,7 @@ function exportCSV() {
 
   // Build headers
   const headers = ['IMEI', 'OEM', 'SKU', 'MODEL', 'Order Type', 'DISPO IN', 'Status', 'QC Result'];
-  dynamicTaskColumns.forEach(col => headers.push(col.label));
+  dynamicTaskColumns.forEach(col => { headers.push(col.label); headers.push(col.label + ' Note'); });
 
   // Build rows from filtered data
   const rows = filteredData.map(dev => {
@@ -409,6 +412,7 @@ function exportCSV() {
     dynamicTaskColumns.forEach(col => {
       const taskData = statuses[col.taskId];
       row.push(taskData ? taskData.result : '');
+      row.push(taskData ? (taskData.note || '') : '');
     });
     return row;
   });

@@ -4,7 +4,7 @@
 // Deploy → New Deployment → Web App → Execute as: Me → Anyone
 // ============================================================
 // Current Apps Script URL:
-// https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec
+// https://script.google.com/macros/s/AKfycbyWkDLEA_EGz3OhWNHWzllRfOnKqn8wuJQB2GSAeyvuG2vjJvBCuTaW-E7MTozqEidS/exec
 // ============================================================
 // SETUP:
 // 1. Google Sheet: "VZ - Buff, Polish, and Repair"
@@ -281,12 +281,29 @@ function doGet(e) {
       var lastRow = tlSheet.getLastRow();
       if (lastRow < 2) return _respond({ success: true, data: [] }, callback);
 
+      // Build Task Name → Task ID map for backward compatibility
+      var taskNameToId = {};
+      var tcSheet = ss.getSheetByName('Task Configuration');
+      if (tcSheet && tcSheet.getLastRow() >= 2) {
+        var tcData = tcSheet.getRange(2, 1, tcSheet.getLastRow() - 1, 2).getValues();
+        tcData.forEach(function(row) {
+          if (row[0] && row[1]) taskNameToId[row[1].toString().trim()] = row[0].toString().trim();
+        });
+      }
+
       var data = tlSheet.getRange(2, 1, lastRow - 1, 7).getValues();
-      var headers = ['IMEI', 'Page', 'Parameter', 'Result', 'User', 'Timestamp', 'Note'];
       var rows = data.map(function(row) {
-        var obj = {};
-        headers.forEach(function(h, i) { obj[h] = row[i] ? row[i].toString() : ''; });
-        return obj;
+        var rawId = row[2] ? row[2].toString().trim() : '';
+        var taskId = taskNameToId[rawId] || rawId;
+        return {
+          'IMEI': row[0] ? row[0].toString() : '',
+          'Page': row[1] ? row[1].toString() : '',
+          'Task ID': taskId,
+          'Result': row[3] ? row[3].toString() : '',
+          'User': row[4] ? row[4].toString() : '',
+          'Timestamp': row[5] ? row[5].toString() : '',
+          'Note': row[6] ? row[6].toString() : ''
+        };
       });
 
       return _respond({ success: true, data: rows }, callback);

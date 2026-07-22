@@ -122,8 +122,8 @@
     <div class="settings-card">
       <h2>Default Web App URL</h2>
       <p>New to this PC? Copy or apply the URL below:</p>
-      <div style="margin-top:8px;font-size:11px;color:#555;font-weight:600;">Deployed: 07/20/2026</div>
-      <div style="margin-top:10px;padding:12px 14px;background:#f0f2f5;border:1px solid #ddd;border-radius:6px;font-family:Consolas,monospace;font-size:11px;word-break:break-all;user-select:all;" id="defaultUrlDisplay">https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec</div>
+      <div style="margin-top:8px;font-size:11px;color:#555;font-weight:600;">Deployed: 07/22/2026</div>
+      <div style="margin-top:10px;padding:12px 14px;background:#f0f2f5;border:1px solid #ddd;border-radius:6px;font-family:Consolas,monospace;font-size:11px;word-break:break-all;user-select:all;" id="defaultUrlDisplay">https://script.google.com/macros/s/AKfycbyWkDLEA_EGz3OhWNHWzllRfOnKqn8wuJQB2GSAeyvuG2vjJvBCuTaW-E7MTozqEidS/exec</div>
       <div style="margin-top:10px;display:flex;gap:8px;">
         <button onclick="copyDefaultUrl()" style="padding:8px 16px;background:#6c757d;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">&#x1F4CB; Copy to Clipboard</button>
         <button onclick="useDefaultUrl()" style="padding:8px 16px;background:#28a745;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">&#x2705; Use This URL</button>
@@ -154,7 +154,7 @@
 <script>
 const URL_KEY = 'vzbnp_script_url';
 let scriptUrl = '';
-try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyMqXovXV1SRZYP5tMDXAc68DOY-6xe7059p2w4J8nQjJj_uRHx7SphMaWviL0kAmPg/exec'; } catch(e) {}
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyWkDLEA_EGz3OhWNHWzllRfOnKqn8wuJQB2GSAeyvuG2vjJvBCuTaW-E7MTozqEidS/exec'; } catch(e) {}
 
 document.getElementById('urlInput').value = scriptUrl;
 document.getElementById('currentUrl').textContent = scriptUrl ? 'Current: ' + scriptUrl : 'No URL saved';
