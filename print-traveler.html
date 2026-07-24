@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VZ Buff &amp; Polish - Print Traveler</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1a3a5c; color: white; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; }
+  .sidebar-brand { padding: 20px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-brand .sub { font-size: 13px; opacity: 0.9; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+  .sidebar-nav::-webkit-scrollbar { width: 6px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: white; }
+  .sidebar-nav a.active { background: rgba(255,255,255,0.12); color: white; border-left-color: #fff; }
+  .sidebar-nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-nav .nav-section { font-size: 12px; text-transform: uppercase; color: rgba(255,255,255,0.85); padding: 16px 16px 8px; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: 600; }
+  .sidebar-nav .nav-section:hover { color: white; background: rgba(255,255,255,0.05); }
+  .sidebar-nav .nav-group { display: none; }
+  .sidebar-nav .nav-group.open { display: block; }
+</style>
+<style>
+  .main-wrap { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .status-dot.connected { background: #28a745; }
+  .status-dot.disconnected { background: #dc3545; }
+  .status-dot.pending { background: #fd7e14; }
+  .status-label { font-size: 11px; color: rgba(255,255,255,0.8); margin-left: 4px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 24px; width: 100%; }
+</style>
+<style>
+  .scan-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .scan-section h2 { font-size: 16px; color: #1a3a5c; margin-bottom: 16px; }
+  .scan-row { display: flex; gap: 12px; align-items: center; }
+  .scan-row input { flex: 1; padding: 12px 16px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; font-family: Consolas, monospace; transition: border-color 0.2s; }
+  .scan-row input:focus { outline: none; border-color: #1a3a5c; }
+  .scan-row button { padding: 12px 24px; background: #1a3a5c; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .scan-row button:hover { background: #2c5f8a; }
+  .scan-row button:disabled { background: #aaa; cursor: not-allowed; }
+</style>
+<style>
+  .traveler-preview { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; display: none; }
+  .traveler-preview.show { display: block; }
+  .print-btn { padding: 12px 28px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+  .print-btn:hover { background: #218838; }
+
+  /* Traveler screen styles */
+  .traveler { border: 1px solid #ddd; padding: 24px; border-radius: 8px; }
+  .traveler-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #333; padding-bottom: 12px; }
+  .traveler-header-left { display: flex; align-items: center; gap: 12px; }
+  .traveler-header-left img { height: 30px; }
+  .traveler-title { font-size: 16px; font-weight: 700; color: #1a3a5c; }
+  .traveler-imei-section { text-align: right; }
+  .traveler-imei { font-family: Consolas, monospace; font-size: 18px; font-weight: 700; color: #333; }
+  .traveler-barcode { margin-top: 4px; }
+  .traveler-barcode svg { width: 200px; height: 50px; }
+  .traveler-device-info { display: flex; gap: 20px; font-size: 12px; margin-bottom: 12px; padding: 8px 0; border-bottom: 1px solid #ddd; }
+  .traveler-device-info span { font-weight: 600; }
+  .traveler-device-info span em { font-weight: 400; font-style: normal; color: #555; }
+  .traveler-print-date { font-size: 11px; color: #888; margin-bottom: 16px; }
+
+  .traveler-section-header { font-size: 13px; font-weight: 700; color: #1a3a5c; padding: 6px 0; margin-top: 12px; border-bottom: 2px solid #1a3a5c; }
+  .traveler-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 8px; }
+  .traveler-table th { background: #f0f2f5; padding: 5px 8px; text-align: left; font-size: 10px; text-transform: uppercase; border: 1px solid #ddd; }
+  .traveler-table td { padding: 5px 8px; border: 1px solid #ddd; vertical-align: top; }
+  .traveler-table .empty-result { border-bottom: 1px dotted #999; min-width: 80px; display: inline-block; height: 14px; }
+  .traveler-table .empty-notes { border-bottom: 1px dotted #999; min-width: 100px; display: inline-block; height: 14px; }
+
+  .traveler-footer { margin-top: 16px; padding-top: 12px; border-top: 2px solid #333; }
+  .traveler-qc-line { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .traveler-qc-line .blank { border-bottom: 1px solid #333; display: inline-block; width: 120px; margin: 0 4px; }
+  .traveler-gen { font-size: 9px; color: #888; margin-top: 8px; }
+
+  #toast { position: fixed; top: 80px; right: 30px; padding: 14px 24px; border-radius: 6px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 400; transform: translateX(120%); transition: transform 0.3s ease; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 300; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+    .sidebar-overlay.show { display: block; }
+    .main-wrap { margin-left: 0; }
+    .header { padding: 12px 16px; }
+    .header h1 { font-size: 16px; }
+    .container { padding: 16px; }
+    .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 20px; margin-right: 12px; }
+  }
+  @media (min-width: 769px) { .hamburger { display: none; } .sidebar-overlay { display: none !important; } }
+</style>
+<style>
+  /* Print Styles */
+  @media print {
+    .sidebar, .main-wrap > .header, .scan-section, .no-print { display: none !important; }
+    .sidebar-overlay { display: none !important; }
+    .main-wrap { margin-left: 0 !important; }
+    .traveler-preview { display: block !important; padding: 0; margin: 0; box-shadow: none; border-radius: 0; background: white; }
+    .print-btn { display: none !important; }
+    .traveler { display: block !important; padding: 0; margin: 0; border: none; border-radius: 0; }
+    body { background: white; }
+    .container { padding: 0; max-width: 100%; }
+
+    .traveler-header { border-bottom: 2px solid #000; position: running(travelerHeader); }
+    .traveler-title { color: #000; }
+    .traveler-section-header { color: #000; border-bottom-color: #000; font-size: 11px; margin-top: 8px; }
+    .traveler-table { font-size: 10px; }
+    .traveler-table th { background: #eee; font-size: 9px; padding: 4px 6px; }
+    .traveler-table td { padding: 4px 6px; }
+    .traveler-barcode svg { width: 200px; height: 45px; }
+    .traveler-device-info { font-size: 11px; }
+    .traveler-footer { border-top: 2px solid #000; }
+    .traveler-qc-line { font-size: 12px; }
+    .traveler-gen { font-size: 8px; }
+
+    /* Repeat header on each page */
+    .traveler-repeat-header { display: table-header-group; }
+    .traveler-body { display: table-row-group; }
+    .traveler-repeat-header .rh-content { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 2px solid #000; }
+  }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand"><img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="width:100%;margin-bottom:10px;"><div class="sub">VZ Buff &amp; Polish</div></div>
+  <div class="sidebar-nav">
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Reporting</div>
+    <div class="nav-group">
+      <a href="overview.html"><span class="icon">&#x1F4CB;</span> Overview</a>
+      <a href="report-unit-summary.html"><span class="icon">&#x1F4CA;</span> Unit Summary</a>
+      <a href="report-transaction-log.html"><span class="icon">&#x1F4D1;</span> Transaction Log</a>
+      <a href="print-traveler.html" class="active"><span class="icon">&#x1F5A8;</span> Print Traveler</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Intake &amp; Grading</div>
+    <div class="nav-group">
+      <a href="unit-validation.html"><span class="icon">&#x2705;</span> Unit Validation</a>
+      <a href="initial-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Initial Cosmetic Grading</a>
+      <a href="customer-info.html"><span class="icon">&#x1F464;</span> Customer Information</a>
+      <a href="initial-functional-test.html"><span class="icon">&#x1F9EA;</span> Initial Functional Testing</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Unit Services</div>
+    <div class="nav-group">
+      <a href="repair.html"><span class="icon">&#x1F527;</span> Repair</a>
+      <a href="buff-and-polish.html"><span class="icon">&#x2728;</span> Buff &amp; Polish</a>
+      <a href="paint.html"><span class="icon">&#x1F3A8;</span> Paint</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Final Results</div>
+    <div class="nav-group">
+      <a href="final-functional-test.html"><span class="icon">&#x1F9EA;</span> Final Functional Testing</a>
+      <a href="final-cosmetic-grading.html"><span class="icon">&#x1F50D;</span> Final Cosmetic Grading</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; Quality Control</div>
+    <div class="nav-group">
+      <a href="qc.html"><span class="icon">&#x2611;</span> Results Validation</a>
+    </div>
+    <div class="nav-section" onclick="toggleNavGroup(this)">&#9654; System</div>
+    <div class="nav-group">
+      <a href="settings.html"><span class="icon">&#x2699;&#xFE0F;</span> Settings</a>
+      <a href="task-manager.html"><span class="icon">&#x1F4DD;</span> Task Manager</a>
+    </div>
+  </div>
+</nav>
+<div class="main-wrap">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="header">
+    <div style="display:flex;align-items:center;"><button class="hamburger" onclick="toggleSidebar()">&#9776;</button><div><h1>Print Traveler</h1><div class="header-sub">CTDI &#8212; VZ Buff &amp; Polish</div></div></div>
+    <div class="header-right">
+      <span class="status-dot disconnected" id="statusDot"></span>
+      <span class="status-label" id="statusLabel">Not connected</span>
+    </div>
+  </div>
+  <div class="container">
+    <div class="scan-section">
+      <h2>Scan IMEI</h2>
+      <div class="scan-row">
+        <input type="text" id="imeiInput" placeholder="Scan or enter IMEI..." autofocus onkeydown="if(event.key==='Enter')lookupUnit()">
+        <button id="lookupBtn" onclick="lookupUnit()">Lookup</button>
+      </div>
+    </div>
+
+    <div class="traveler-preview" id="travelerPreview">
+      <button class="print-btn no-print" onclick="window.print()">&#x1F5A8; Print Traveler</button>
+      <div class="traveler" id="travelerContent"></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+</body>
+</html>
+<script>
+const URL_KEY = 'vzbnp_script_url';
+let scriptUrl = '';
+let _jsonpCounter = 0;
+
+try { scriptUrl = localStorage.getItem(URL_KEY) || 'https://script.google.com/macros/s/AKfycbyWkDLEA_EGz3OhWNHWzllRfOnKqn8wuJQB2GSAeyvuG2vjJvBCuTaW-E7MTozqEidS/exec'; } catch(e) {}
+
+// --- Navigation ---
+function toggleNavGroup(el) {
+  const group = el.nextElementSibling;
+  if (group && group.classList.contains('nav-group')) {
+    group.classList.toggle('open');
+    el.innerHTML = (group.classList.contains('open') ? '&#9660; ' : '&#9654; ') + el.textContent.trim().substring(2);
+  }
+}
+function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+// Auto-open nav group for active link
+document.addEventListener('DOMContentLoaded', function() {
+  const active = document.querySelector('.sidebar-nav a.active');
+  if (active) {
+    const group = active.closest('.nav-group');
+    if (group) { group.classList.add('open'); const sec = group.previousElementSibling; if (sec) sec.innerHTML = '&#9660; ' + sec.textContent.trim().substring(2); }
+  }
+});
+
+// --- Toast ---
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#0d6efd';
+  t.style.transform = 'translateX(0)';
+  setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 3500);
+}
+
+// --- Status ---
+function setStatus(state, label) {
+  document.getElementById('statusDot').className = 'status-dot ' + state;
+  document.getElementById('statusLabel').textContent = label;
+}
+
+// --- JSONP ---
+function jsonpRequest(url, params) {
+  return new Promise((resolve, reject) => {
+    const cb = '_jsonpCb_' + (++_jsonpCounter) + '_' + Date.now();
+    const qs = Object.entries(params||{}).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = url + sep + 'callback=' + cb + (qs ? '&' + qs : '');
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Timed out')); }, 30000);
+    function cleanup() { clearTimeout(timeout); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    const s = document.createElement('script');
+    s.src = fullUrl; s.onerror = function() { cleanup(); reject(new Error('Network error')); };
+    document.head.appendChild(s);
+  });
+}
+
+// --- Escape HTML ---
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// --- Format Date as DDMMMYY H:MM AM EST ---
+function formatDate(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  if (isNaN(d.getTime())) return escapeHtml(str);
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const day = String(d.getDate()).padStart(2, '0');
+  const mon = months[d.getMonth()];
+  const yr = String(d.getFullYear()).slice(2);
+  let hr = d.getHours();
+  const ampm = hr >= 12 ? 'PM' : 'AM';
+  hr = hr % 12 || 12;
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return day + mon + yr + ' ' + hr + ':' + min + ' ' + ampm + ' EST';
+}
+
+// --- Page Group Order ---
+const PAGE_ORDER = [
+  'Unit Validation',
+  'Initial Cosmetic Grading',
+  'Customer Information',
+  'Initial Functional Testing',
+  'Repair',
+  'Buff & Polish',
+  'Paint',
+  'Final Functional Testing',
+  'Final Cosmetic Grading',
+  'QC'
+];
+
+// --- Lookup Unit ---
+async function lookupUnit() {
+  const imei = document.getElementById('imeiInput').value.trim();
+  if (!imei) { showToast('Please scan or enter an IMEI', 'error'); return; }
+  if (!scriptUrl) { setStatus('disconnected', 'No URL — go to Settings'); showToast('Script URL not configured', 'error'); return; }
+
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  setStatus('pending', 'Looking up...');
+
+  try {
+    const [deviceJson, statusJson, tasksJson] = await Promise.all([
+      jsonpRequest(scriptUrl, { action: 'lookupdevice', imei: imei }),
+      jsonpRequest(scriptUrl, { action: 'getstatus', imei: imei }),
+      jsonpRequest(scriptUrl, { action: 'readtasks' })
+    ]);
+
+    if (!deviceJson.success || !deviceJson.data) {
+      throw new Error('Device not found for IMEI: ' + imei);
+    }
+
+    const device = deviceJson.data;
+    const statuses = (statusJson.success && statusJson.data) ? statusJson.data : {};
+    const allTasks = (tasksJson.success && tasksJson.data) ? tasksJson.data : [];
+
+    // Filter tasks by order type
+    const orderType = device['Order Type'] || '';
+    const filteredTasks = allTasks.filter(t => {
+      if (t['Active'] !== 'Yes') return false;
+      if (orderType === 'CLNR') return t['CLNR'] === 'Yes';
+      if (orderType === 'CPO') return t['CPO'] === 'Yes';
+      return true;
+    });
+
+    // Group by Page
+    const grouped = {};
+    filteredTasks.forEach(t => {
+      const page = t['Page'] || 'Other';
+      if (!grouped[page]) grouped[page] = [];
+      grouped[page].push(t);
+    });
+
+    // Sort each group by Sort Order
+    Object.keys(grouped).forEach(page => {
+      grouped[page].sort((a, b) => (Number(a['Sort Order']) || 0) - (Number(b['Sort Order']) || 0));
+    });
+
+    // Build traveler
+    buildTraveler(imei, device, statuses, grouped);
+    setStatus('connected', 'Connected');
+    showToast('Traveler generated for ' + imei, 'success');
+  } catch(err) {
+    setStatus('disconnected', 'Error');
+    showToast('Error: ' + err.message, 'error');
+    document.getElementById('travelerPreview').classList.remove('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Lookup';
+  }
+}
+
+// --- Build Traveler ---
+function buildTraveler(imei, device, statuses, grouped) {
+  const now = new Date();
+  const timestamp = now.toLocaleString();
+
+  let html = '';
+
+  // Wrap entire traveler in a table so thead repeats on each page
+  html += '<table style="width:100%;border-collapse:collapse;">';
+
+  // Repeating header (thead)
+  html += '<thead class="traveler-repeat-header"><tr><td style="padding:0;">';
+  html += '<div class="rh-content">';
+  html += '  <div style="display:flex;align-items:center;gap:12px;">';
+  html += '    <img src="https://www.ctdi.com/wp-content/uploads/2020/12/ctdi-flat-logo-white-1024x223.png" alt="CTDI" style="height:28px;filter:brightness(0);">';
+  html += '    <div class="traveler-title">VZ Buff &amp; Polish — Unit Traveler</div>';
+  html += '  </div>';
+  html += '  <div style="text-align:right;">';
+  html += '    <div class="traveler-imei">' + escapeHtml(imei) + '</div>';
+  html += '    <div class="traveler-barcode"><svg id="barcodeIMEI"></svg></div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="traveler-device-info">';
+  html += '  <span>OEM: <em>' + escapeHtml(device['OEM'] || '—') + '</em></span>';
+  html += '  <span>Model: <em>' + escapeHtml(device['MODEL'] || '—') + '</em></span>';
+  html += '  <span>SKU: <em>' + escapeHtml(device['SKU'] || '—') + '</em></span>';
+  html += '  <span>Order Type: <em>' + escapeHtml(device['Order Type'] || '—') + '</em></span>';
+  html += '  <span>DISPO IN: <em>' + escapeHtml(device['DISPO IN'] || '—') + '</em></span>';
+  html += '</div>';
+  html += '</td></tr></thead>';
+
+  // Body content (tbody)
+  html += '<tbody class="traveler-body"><tr><td style="padding:0;">';
+
+  // Print date
+  html += '<div class="traveler-print-date">Printed: ' + formatDate(now.toString()) + '</div>';
+
+  // Task sections by page group order
+  PAGE_ORDER.forEach(pageName => {
+    const tasks = grouped[pageName];
+    if (!tasks || tasks.length === 0) return;
+
+    html += '<div class="traveler-section-header">' + escapeHtml(pageName) + '</div>';
+    html += '<table class="traveler-table">';
+    html += '<thead><tr><th style="width:25%">Task</th><th style="width:20%">Result</th><th style="width:15%">User</th><th style="width:15%">Date</th><th style="width:25%">Notes</th></tr></thead>';
+    html += '<tbody>';
+
+    tasks.forEach(task => {
+      const taskId = task['Task ID'];
+      const label = task['Label'] || taskId;
+      const status = statuses[taskId];
+
+      let resultCell, userCell, dateCell, notesCell;
+
+      if (status && status.result) {
+        resultCell = escapeHtml(status.result);
+        userCell = escapeHtml(status.user || '');
+        dateCell = formatDate(status.timestamp || '');
+        notesCell = status.note ? escapeHtml(status.note) : '<span class="empty-notes"></span>';
+      } else {
+        resultCell = '<span class="empty-result"></span>';
+        userCell = '';
+        dateCell = '';
+        notesCell = '<span class="empty-notes"></span>';
+      }
+
+      html += '<tr>';
+      html += '  <td>' + escapeHtml(label) + '</td>';
+      html += '  <td>' + resultCell + '</td>';
+      html += '  <td>' + userCell + '</td>';
+      html += '  <td>' + dateCell + '</td>';
+      html += '  <td>' + notesCell + '</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+  });
+
+  // Footer
+  html += '<div class="traveler-footer">';
+  html += '  <div class="traveler-qc-line">QC Final Result: <span class="blank"></span> Operator: <span class="blank"></span> Date: <span class="blank"></span></div>';
+  html += '  <div class="traveler-gen">Generated ' + formatDate(now.toString()) + ' — CTDI VZ Buff &amp; Polish</div>';
+  html += '</div>';
+
+  // Close tbody and table
+  html += '</td></tr></tbody></table>';
+
+  // Render
+  document.getElementById('travelerContent').innerHTML = html;
+  document.getElementById('travelerPreview').classList.add('show');
+
+  // Render barcode
+  try {
+    JsBarcode('#barcodeIMEI', imei, {
+      format: 'CODE128',
+      width: 1.5,
+      height: 40,
+      displayValue: false,
+      margin: 0
+    });
+  } catch(e) {
+    console.warn('Barcode render error:', e);
+  }
+}
+
+// --- Init ---
+if (scriptUrl) { setStatus('connected', 'Ready'); } else { setStatus('disconnected', 'No URL — go to Settings'); }
+</script>
